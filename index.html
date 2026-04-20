@@ -224,6 +224,10 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
 
 @media(max-width:900px){.dash{grid-template-columns:1fr;height:auto}.center-panel{order:-1}}
 </style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 </head>
 <body>
 <div class="beep-banner" id="beep-banner">🚨 ALERT</div>
@@ -368,12 +372,12 @@ const g=id=>document.getElementById(id);
 let sirenAudio=null;
 
 /* ── TEMPORAL SMOOTHING ──
-   Require 3 consecutive same-label frames before acting.
-   This prevents toolbar/taskbar flickers triggering false alerts.
+   Require 2 consecutive same-label frames before acting.
+   Lower threshold = more responsive detection from side angle.
 */
-const SMOOTHING_FRAMES = 3;      // consecutive frames needed (webcam)
-const PHONE_SMOOTHING_FRAMES = 4; // extra smoothing for side-angle phone
-const CONFIDENCE_THRESHOLD = 75; // raised to 75% — must be very sure
+const SMOOTHING_FRAMES = 2;      // consecutive frames needed (webcam)
+const PHONE_SMOOTHING_FRAMES = 2; // reduced for phone — faster detection
+const CONFIDENCE_THRESHOLD = 50; // lowered to 50% — side angle gives lower confidence
 let labelBuffer = [];             // rolling buffer of recent labels
 
 const S={
@@ -488,16 +492,16 @@ function handlePrediction(preds){
     // Still building consensus — just update display without triggering alerts
     if(label.includes('focused')){onFocusedDisplay();}
     else if(label.includes('distracted')){onDistractedDisplay();}
-    else if(label.includes('phone')&&confNum>=85){onPhoneDisplay();}
+    else if(label.includes('phone')&&confNum>=55){onPhoneDisplay();}
     return;
   }
 
   // Stable confirmed label — now trigger actual alerts
   if(stableLabel.includes('focused')){
     onFocused(conf);
-  } else if(stableLabel.includes('phone')&&confNum>=85){
+  } else if(stableLabel.includes('phone')&&confNum>=55){
     onPhone(conf);
-  } else if(stableLabel.includes('distracted')||(stableLabel.includes('phone')&&confNum<85)){
+  } else if(stableLabel.includes('distracted')||(stableLabel.includes('phone')&&confNum<55)){
     onDistracted(conf);
   }
 
@@ -580,18 +584,14 @@ function raiseAlert(msg){
 }
 
 function pushToFaculty(msg,timeStr){
-  // Send violation to Python backend
-  fetch('/api/violations/log',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      exam_id:  session.examId,
-      num:      S.alerts,
-      time:     timeStr,
-      msg:      msg,
-      integrity:Math.max(0,100-S.flags*7)
-    })
-  }).catch(()=>{}); // silent fail — detection continues even if server offline
+  // Log violation to Firebase Firestore
+  logViolation(
+    session.examId,
+    S.alerts,
+    timeStr,
+    msg,
+    Math.max(0,100-S.flags*7)
+  ).catch(()=>{}); // silent fail — detection continues even if offline
 }
 
 function captureFrame(num,msg,time){
@@ -1092,11 +1092,7 @@ function startPhoneFrameLoop(){
 function logOut(){
   try{if(pcConn)pcConn.close();}catch(e){}
   try{if(pcPeer)pcPeer.destroy();}catch(e){}
-  fetch('/api/session/end',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({exam_id:session.examId})
-  }).catch(()=>{});
+  endSession(session.examId).catch(()=>{});
   sessionStorage.removeItem('proctor_session');
   window.location.href='login.html';
 }

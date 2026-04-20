@@ -135,6 +135,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 
 @media(max-width:900px){.stats-row{grid-template-columns:1fr 1fr}.students-grid{grid-template-columns:1fr}.page{padding:16px}.hdr{padding:0 16px}}
 </style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 </head>
 <body>
 
@@ -220,13 +224,7 @@ function generateCode(){return Math.random().toString(36).substring(2,8).toUpper
 
 async function registerRoom(code){
   sessionStorage.setItem('proctor_faculty_room_'+session.email, code);
-  try{
-    await fetch('/api/rooms/create',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({code, faculty_email:session.email, exam_name:'Exam Session'})
-    });
-  }catch(e){}
+  try{ await createRoom(code, session.email, 'Exam Session'); }catch(e){}
 }
 
 async function generateNewCode(){
@@ -239,25 +237,23 @@ async function generateNewCode(){
 function showCodePopup(){document.getElementById('code-popup').classList.remove('hidden');}
 function closeCodePopup(){document.getElementById('code-popup').classList.add('hidden');}
 
-async function refresh(){
-  try{
-    const res  = await fetch('/api/dashboard/'+currentRoomCode);
-    const data = await res.json();
-    if(!data.ok) return;
-    const list = data.students || [];
+// Real-time Firebase listener — updates instantly when student gets flagged
+let unsubscribe = null;
+function refresh(){
+  if(unsubscribe) unsubscribe(); // stop old listener
+  unsubscribe = listenToRoom(currentRoomCode, students => {
+    const active          = students.filter(s=>s.status!=='ended');
+    const totalViolations = students.reduce((a,s)=>a+(s.violations||0),0);
+    const flagged         = students.filter(s=>(s.violations||0)>0).length;
+    const critical        = students.filter(s=>(s.violations||0)>=5).length;
 
-    const active         = list.filter(s=>s.status!=='ended');
-    const totalViolations= list.reduce((a,s)=>a+(s.violations||0),0);
-    const flagged        = list.filter(s=>(s.violations||0)>0).length;
-    const critical       = list.filter(s=>(s.violations||0)>=5).length;
+    g('stat-active').textContent     = active.length;
+    g('stat-violations').textContent = totalViolations;
+    g('stat-flagged').textContent    = flagged;
+    g('stat-critical').textContent   = critical;
+    g('count-badge').textContent     = students.length+' STUDENT'+(students.length!==1?'S':'');
 
-    g('stat-active').textContent    = active.length;
-    g('stat-violations').textContent= totalViolations;
-    g('stat-flagged').textContent   = flagged;
-    g('stat-critical').textContent  = critical;
-    g('count-badge').textContent    = list.length+' STUDENT'+(list.length!==1?'S':'');
-
-    list.forEach(s=>{
+    students.forEach(s=>{
       const prev=prevViolationCounts[s.student_id];
       if(prev!==undefined&&(s.violations||0)>prev){
         showToast('🚨 '+s.student_id+': '+(s.last_violation||'Violation'));
@@ -265,10 +261,9 @@ async function refresh(){
       prevViolationCounts[s.student_id]=s.violations||0;
     });
 
-    renderGrid(list);
-  }catch(e){
-    console.warn('Refresh failed — is the Python server running?',e);
-  }
+    renderGrid(students);
+    g('refresh-timer').textContent='🔴 Live';
+  });
 }
 
 function renderGrid(students){

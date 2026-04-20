@@ -61,6 +61,10 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
 .sdot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:blink 1.5s ease-in-out infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 </style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 </head>
 <body>
 <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
@@ -144,20 +148,17 @@ async function studentLogin(){
   const btn=document.querySelector('#form-student .btn-submit');
   btn.disabled=true; btn.textContent='Joining…';
   try{
-    const res = await fetch('/api/student/login',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({name,id,subject,code,email,password:pass})
-    });
-    const data = await res.json();
-    if(!data.ok){showErr('s-err1', data.msg||'Login failed.');btn.disabled=false;btn.textContent='JOIN EXAM SESSION →';return;}
-    // Store session in sessionStorage (tab-scoped, not shared)
-    sessionStorage.setItem('proctor_session', JSON.stringify(data.session));
+    const session = await studentLogin_fb(name,id,subject,code,email,pass);
+    sessionStorage.setItem('proctor_session', JSON.stringify(session));
     window.location.href='index.html';
   }catch(e){
-    showErr('s-err1','Server error. Is the Python server running?');
+    showErr('s-err1', e.message||'Login failed.');
     btn.disabled=false; btn.textContent='JOIN EXAM SESSION →';
   }
+}
+
+async function studentLogin_fb(name,id,subject,code,email,pass){
+  return await studentLogin(name,id,subject,code,email,pass);
 }
 
 async function facultyLogin(){
@@ -168,22 +169,16 @@ async function facultyLogin(){
   const btn=document.querySelector('#f-login .btn-submit');
   btn.disabled=true; btn.textContent='Signing in…';
   try{
-    const res = await fetch('/api/faculty/login',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email,password:pass})
-    });
-    const data = await res.json();
-    if(!data.ok){showErr('f-err', data.msg||'Login failed.');btn.disabled=false;btn.textContent='ACCESS DASHBOARD →';return;}
+    const data = await facultyLogin(email,pass);
     sessionStorage.setItem('proctor_session', JSON.stringify({role:'faculty',name:data.name,email:data.email,loginTime:new Date().toISOString()}));
     window.location.href='faculty.html';
   }catch(e){
-    showErr('f-err','Server error. Is the Python server running?');
+    showErr('f-err', e.message||'Login failed.');
     btn.disabled=false; btn.textContent='ACCESS DASHBOARD →';
   }
 }
 
-async function facultyRegister(){
+async function facultyRegisterSubmit(){
   clearErr('f-reg-err');document.getElementById('f-reg-succ').classList.remove('show');
   const name  = document.getElementById('f-reg-name').value.trim();
   const email = document.getElementById('f-reg-email').value.trim().toLowerCase();
@@ -196,26 +191,19 @@ async function facultyRegister(){
   const btn=document.querySelector('#f-register .btn-submit');
   btn.disabled=true; btn.textContent='Creating…';
   try{
-    const res = await fetch('/api/faculty/register',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({name,email,password:pass})
-    });
-    const data = await res.json();
-    if(!data.ok){showErr('f-reg-err', data.msg||'Registration failed.');btn.disabled=false;btn.textContent='CREATE ACCOUNT →';return;}
+    await facultyRegister(name,email,pass);
     document.getElementById('f-reg-succ').classList.add('show');
     setTimeout(()=>{facTab('login');document.getElementById('f-email').value=email;},1500);
-    btn.disabled=false; btn.textContent='CREATE ACCOUNT →';
   }catch(e){
-    showErr('f-reg-err','Server error. Is the Python server running?');
-    btn.disabled=false; btn.textContent='CREATE ACCOUNT →';
+    showErr('f-reg-err', e.message||'Registration failed.');
   }
+  btn.disabled=false; btn.textContent='CREATE ACCOUNT →';
 }
 
 document.addEventListener('keydown',e=>{
   if(e.key!=='Enter')return;
   if(document.getElementById('form-faculty').classList.contains('active')){
-    if(document.getElementById('f-login').classList.contains('active'))facultyLogin();else facultyRegister();
+    if(document.getElementById('f-login').classList.contains('active'))facultyLogin();else facultyRegisterSubmit();
   }else{
     studentLogin();
   }
