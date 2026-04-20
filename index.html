@@ -584,14 +584,13 @@ function raiseAlert(msg){
 }
 
 function pushToFaculty(msg,timeStr){
-  // Log violation to Firebase Firestore
-  logViolation(
+  fb_logViolation(
     session.examId,
     S.alerts,
     timeStr,
     msg,
     Math.max(0,100-S.flags*7)
-  ).catch(()=>{}); // silent fail — detection continues even if offline
+  ).catch(()=>{});
 }
 
 function captureFrame(num,msg,time){
@@ -1092,7 +1091,7 @@ function startPhoneFrameLoop(){
 function logOut(){
   try{if(pcConn)pcConn.close();}catch(e){}
   try{if(pcPeer)pcPeer.destroy();}catch(e){}
-  endSession(session.examId).catch(()=>{});
+  fb_endSession(session.examId).catch(()=>{});
   sessionStorage.removeItem('proctor_session');
   window.location.href='login.html';
 }

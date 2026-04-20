@@ -2,61 +2,38 @@
   ═══════════════════════════════════════════════════════
   AI Exam Proctor — Firebase Configuration
   ═══════════════════════════════════════════════════════
-  
-  SETUP STEPS (5 minutes):
-  1. Go to https://console.firebase.google.com
-  2. Click "Add project" → name it "exam-proctor" → Create
-  3. Click "Web" icon (</>) to add web app → Register app
-  4. Copy the firebaseConfig object and paste it below
-  5. In Firebase console → Build → Firestore Database
-     → Create database → Start in TEST MODE → Enable
-  6. Done! Push to GitHub Pages and it works.
-
+  SETUP: Replace the values below with your Firebase project config.
+  Get it from: Firebase Console → Project Overview → </> Web app
   ═══════════════════════════════════════════════════════
 */
 
 // ── PASTE YOUR FIREBASE CONFIG HERE ──────────────────
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDQw4bHHvf64cDn8L0eJliQ9rRDeFkp_Eg",
-  authDomain: "proctor-ai-87d06.firebaseapp.com",
-  projectId: "proctor-ai-87d06",
-  storageBucket: "proctor-ai-87d06.firebasestorage.app",
-  messagingSenderId: "28127012869",
-  appId: "1:28127012869:web:e4f55c75cb7e7e5a8ed46c"
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT.firebaseapp.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
 };
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
 // ─────────────────────────────────────────────────────
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+// Initialize Firebase (compat SDK — no import needed)
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 const db = firebase.firestore();
 
-/*
-  ═══════════════════════════════════
-  HELPER FUNCTIONS
-  Used by login.html, index.html, faculty.html
-  ═══════════════════════════════════
-*/
-
-// Simple SHA-256 password hash (browser-native)
+// ── Password hashing ──────────────────────────────────
 async function hashPassword(password) {
-  const msgBuffer = new TextEncoder().encode(password);
+  const msgBuffer  = new TextEncoder().encode(password);
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
   const hashArray  = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
 // ── FACULTY ──────────────────────────────────────────
-
-async function facultyRegister(name, email, password) {
+async function fb_facultyRegister(name, email, password) {
   const hash = await hashPassword(password);
   const ref  = db.collection('faculty').doc(email.toLowerCase());
   const snap = await ref.get();
@@ -64,7 +41,7 @@ async function facultyRegister(name, email, password) {
   await ref.set({ name, email: email.toLowerCase(), password: hash, created: new Date().toISOString() });
 }
 
-async function facultyLogin(email, password) {
+async function fb_facultyLogin(email, password) {
   const hash = await hashPassword(password);
   const snap = await db.collection('faculty').doc(email.toLowerCase()).get();
   if (!snap.exists || snap.data().password !== hash) throw new Error('Email or password is incorrect.');
@@ -72,40 +49,33 @@ async function facultyLogin(email, password) {
 }
 
 // ── ROOMS ─────────────────────────────────────────────
-
-async function createRoom(code, facultyEmail, examName) {
+async function fb_createRoom(code, facultyEmail, examName) {
   await db.collection('rooms').doc(code.toUpperCase()).set({
-    code: code.toUpperCase(),
+    code:          code.toUpperCase(),
     faculty_email: facultyEmail.toLowerCase(),
-    exam_name: examName,
-    created: new Date().toISOString(),
-    active: true
+    exam_name:     examName,
+    created:       new Date().toISOString(),
+    active:        true
   });
 }
 
-async function validateRoom(code) {
+async function fb_validateRoom(code) {
   const snap = await db.collection('rooms').doc(code.toUpperCase()).get();
   if (!snap.exists || !snap.data().active) throw new Error('Invalid room code. Ask your faculty.');
   return snap.data();
 }
 
 // ── STUDENTS ──────────────────────────────────────────
-
-async function studentLogin(name, id, subject, code, email, password) {
-  // Validate room
-  await validateRoom(code);
-
+async function fb_studentLogin(name, id, subject, code, email, password) {
+  await fb_validateRoom(code);
   const hash     = await hashPassword(password);
   const studRef  = db.collection('students').doc(email.toLowerCase());
   const studSnap = await studRef.get();
-
   if (studSnap.exists) {
     if (studSnap.data().password !== hash) throw new Error('Incorrect password for this email.');
   } else {
     await studRef.set({ email: email.toLowerCase(), password: hash, created: new Date().toISOString() });
   }
-
-  // Create exam session
   const examId = 'EX-' + Math.floor(Math.random() * 90000 + 10000);
   await db.collection('sessions').doc(examId).set({
     exam_id:       examId,
@@ -119,42 +89,34 @@ async function studentLogin(name, id, subject, code, email, password) {
     integrity:     100,
     status:        'active'
   });
-
-  return { role: 'student', name, id, subject, email, roomCode: code.toUpperCase(), examId, loginTime: new Date().toISOString() };
+  return { role:'student', name, id, subject, email, roomCode:code.toUpperCase(), examId, loginTime:new Date().toISOString() };
 }
 
 // ── VIOLATIONS ────────────────────────────────────────
-
-async function logViolation(examId, num, timeStr, msg, integrity) {
-  // Add to violations subcollection
+async function fb_logViolation(examId, num, timeStr, msg, integrity) {
   await db.collection('sessions').doc(examId)
     .collection('violations').add({ num, time: timeStr, msg, integrity });
-  // Update session totals
   await db.collection('sessions').doc(examId).update({
-    violations: num,
+    violations:  num,
     integrity,
-    status:     num >= 5 ? 'critical' : 'warning',
+    status:      num >= 5 ? 'critical' : 'warning',
     last_update: new Date().toISOString()
   });
 }
 
 // ── DASHBOARD ─────────────────────────────────────────
-
-function listenToRoom(roomCode, callback) {
-  // Real-time listener — updates faculty dashboard instantly
+function fb_listenToRoom(roomCode, callback) {
   return db.collection('sessions')
     .where('room_code', '==', roomCode.toUpperCase())
     .onSnapshot(snap => {
-      const students = snap.docs.map(d => d.data());
-      callback(students);
+      callback(snap.docs.map(d => d.data()));
     });
 }
 
 // ── SESSION END ───────────────────────────────────────
-
-async function endSession(examId) {
+async function fb_endSession(examId) {
   await db.collection('sessions').doc(examId).update({
-    status: 'ended',
+    status:      'ended',
     last_update: new Date().toISOString()
   });
 }

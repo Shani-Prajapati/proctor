@@ -148,7 +148,7 @@ async function studentLogin(){
   const btn=document.querySelector('#form-student .btn-submit');
   btn.disabled=true; btn.textContent='Joining…';
   try{
-    const session = await studentLogin_fb(name,id,subject,code,email,pass);
+    const session = await fb_studentLogin(name,id,subject,code,email,pass);
     sessionStorage.setItem('proctor_session', JSON.stringify(session));
     window.location.href='index.html';
   }catch(e){
@@ -169,7 +169,7 @@ async function facultyLogin(){
   const btn=document.querySelector('#f-login .btn-submit');
   btn.disabled=true; btn.textContent='Signing in…';
   try{
-    const data = await facultyLogin(email,pass);
+    const data = await fb_facultyLogin(email,pass);
     sessionStorage.setItem('proctor_session', JSON.stringify({role:'faculty',name:data.name,email:data.email,loginTime:new Date().toISOString()}));
     window.location.href='faculty.html';
   }catch(e){
@@ -191,7 +191,7 @@ async function facultyRegisterSubmit(){
   const btn=document.querySelector('#f-register .btn-submit');
   btn.disabled=true; btn.textContent='Creating…';
   try{
-    await facultyRegister(name,email,pass);
+    await fb_facultyRegister(name,email,pass);
     document.getElementById('f-reg-succ').classList.add('show');
     setTimeout(()=>{facTab('login');document.getElementById('f-email').value=email;},1500);
   }catch(e){

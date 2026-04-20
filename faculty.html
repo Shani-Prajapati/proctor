@@ -224,7 +224,7 @@ function generateCode(){return Math.random().toString(36).substring(2,8).toUpper
 
 async function registerRoom(code){
   sessionStorage.setItem('proctor_faculty_room_'+session.email, code);
-  try{ await createRoom(code, session.email, 'Exam Session'); }catch(e){}
+  try{ await fb_createRoom(code, session.email, 'Exam Session'); }catch(e){}
 }
 
 async function generateNewCode(){
@@ -241,7 +241,7 @@ function closeCodePopup(){document.getElementById('code-popup').classList.add('h
 let unsubscribe = null;
 function refresh(){
   if(unsubscribe) unsubscribe(); // stop old listener
-  unsubscribe = listenToRoom(currentRoomCode, students => {
+  unsubscribe = fb_listenToRoom(currentRoomCode, students => {
     const active          = students.filter(s=>s.status!=='ended');
     const totalViolations = students.reduce((a,s)=>a+(s.violations||0),0);
     const flagged         = students.filter(s=>(s.violations||0)>0).length;
