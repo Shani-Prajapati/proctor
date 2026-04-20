@@ -22,8 +22,8 @@ import sqlite3, hashlib, os, json
 from datetime import datetime
 
 # ── App setup ──────────────────────────────────────────────────
-app = Flask(__name__, static_folder='static')
-CORS(app)  # allow requests from phone (different origin via PeerJS)
+app = Flask(__name__, static_folder='.', static_url_path='')
+CORS(app)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH  = os.path.join(BASE_DIR, 'proctor.db')
@@ -108,11 +108,11 @@ def now():
 
 @app.route('/')
 def index():
-    return send_from_directory('static', 'login.html')
+    return send_from_directory('.', 'login.html')
 
 @app.route('/<path:filename>')
 def static_files(filename):
-    return send_from_directory('static', filename)
+    return send_from_directory('.', filename)
 
 # ══════════════════════════════════════════════════════════════
 #  FACULTY API
