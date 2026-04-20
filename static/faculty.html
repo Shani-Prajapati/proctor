@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI Exam Proctor — Faculty Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#f8f7f5;--bg2:#f0eeeb;--bg3:#e8e5e0;--text:#1a1a1a;--text2:#4a4a4a;--text3:#888;--M:#8B004A;--M10:rgba(139,0,74,.08);--M20:rgba(139,0,74,.18);--M50:rgba(139,0,74,.5);--red:#dc2626;--red10:rgba(220,38,38,.08);--amber:#d97706;--amber10:rgba(217,119,6,.08);--green:#16a34a;--green10:rgba(22,163,74,.08);--border:#e2ddd8;--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);--r:12px;--rs:8px;--ease:.25s cubic-bezier(.4,0,.2,1);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;}
+.hdr{background:#fff;border-bottom:1px solid var(--border);padding:0 28px;height:62px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 8px rgba(0,0,0,.04);position:sticky;top:0;z-index:100;}
+.hdr-l{display:flex;align-items:center;gap:14px;}
+.logo{width:36px;height:36px;border-radius:50%;background:var(--M);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px var(--M10);}
+.site-title{font-family:'Orbitron',sans-serif;font-size:.88rem;font-weight:700;letter-spacing:.06em;color:var(--text);}
+.site-title span{color:var(--M);}
+.site-sub{font-size:.6rem;letter-spacing:.08em;color:var(--text3);font-family:'Orbitron',sans-serif;}
+.hdr-r{display:flex;align-items:center;gap:12px;}
+.faculty-pill{display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;background:var(--M10);border:1px solid var(--M20);font-size:.7rem;font-weight:600;color:var(--M);}
+.faculty-avatar{width:26px;height:26px;border-radius:50%;background:var(--M);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.63rem;font-weight:700;}
+.live-pill{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;background:rgba(22,163,74,.08);border:1px solid rgba(22,163,74,.2);font-size:.63rem;font-weight:600;color:var(--green);font-family:'Orbitron',sans-serif;letter-spacing:.08em;}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:blink 1.5s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.hclock{font-family:'Orbitron',sans-serif;font-size:.68rem;letter-spacing:.1em;color:var(--text3);}
+.btn-logout{padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--text2);font-size:.68rem;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
+.btn-logout:hover{border-color:var(--red);color:var(--red);}
+.page{padding:24px 28px;max-width:1400px;margin:0 auto;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.stat-card{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:14px;transition:box-shadow var(--ease);}
+.stat-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);}
+.stat-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
+.stat-icon.green{background:var(--green10);}
+.stat-icon.red{background:var(--red10);}
+.stat-icon.amber{background:var(--amber10);}
+.stat-icon.maroon{background:var(--M10);}
+.stat-num{font-family:'Orbitron',sans-serif;font-size:1.55rem;font-weight:900;line-height:1;color:var(--text);}
+.stat-num.danger{color:var(--red);}
+.stat-lbl{font-size:.66rem;color:var(--text3);margin-top:3px;}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.sec-title{font-family:'Orbitron',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.18em;color:var(--text);display:flex;align-items:center;gap:8px;}
+.sec-badge{padding:3px 10px;border-radius:20px;background:var(--M10);color:var(--M);font-size:.58rem;font-weight:700;letter-spacing:.08em;}
+.sec-right{display:flex;align-items:center;gap:10px;}
+.btn-sec{padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--text2);font-size:.66rem;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s;font-family:'DM Sans',sans-serif;}
+.btn-sec:hover{border-color:var(--M);color:var(--M);}
+.refresh-timer{font-size:.6rem;color:var(--text3);font-family:'Orbitron',sans-serif;letter-spacing:.06em;}
+.students-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+.student-card{background:#fff;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);transition:box-shadow var(--ease),border-color var(--ease),transform var(--ease);animation:cardIn .35s ease;}
+@keyframes cardIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.student-card:hover{box-shadow:0 8px 28px rgba(0,0,0,.1);transform:translateY(-2px);}
+.student-card.clean{border-color:rgba(22,163,74,.25);}
+.student-card.warning{border-color:rgba(217,119,6,.35);}
+.student-card.critical{border-color:rgba(220,38,38,.5);animation:cardIn .35s ease,pulse-card 2s ease-in-out infinite;}
+@keyframes pulse-card{0%,100%{box-shadow:var(--shadow)}50%{box-shadow:0 0 0 3px rgba(220,38,38,.12),0 8px 28px rgba(0,0,0,.08);}}
+.student-card.ended{opacity:.55;border-color:var(--border);}
+.card-hdr{padding:13px 15px 11px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.card-hdr-l{display:flex;align-items:center;gap:10px;}
+.student-avatar{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:.72rem;font-weight:700;flex-shrink:0;}
+.student-avatar.clean{background:var(--green10);color:var(--green);}
+.student-avatar.warning{background:var(--amber10);color:var(--amber);}
+.student-avatar.critical{background:var(--red10);color:var(--red);}
+.student-avatar.ended{background:var(--bg2);color:var(--text3);}
+.student-name{font-weight:600;font-size:.84rem;color:var(--text);}
+.student-sub{font-size:.63rem;color:var(--text3);margin-top:1px;}
+.status-badge{padding:4px 9px;border-radius:20px;font-size:.58rem;font-weight:700;letter-spacing:.08em;white-space:nowrap;}
+.status-badge.clean{background:var(--green10);color:var(--green);}
+.status-badge.warning{background:var(--amber10);color:var(--amber);}
+.status-badge.critical{background:var(--red10);color:var(--red);}
+.status-badge.ended{background:var(--bg2);color:var(--text3);}
+.violation-count{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;font-family:'Orbitron',sans-serif;font-size:.8rem;font-weight:900;flex-shrink:0;}
+.violation-count.clean{background:var(--green10);color:var(--green);}
+.violation-count.warning{background:var(--amber10);color:var(--amber);}
+.violation-count.critical{background:var(--red10);color:var(--red);}
+.card-body{padding:13px 15px;}
+.info-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.info-k{font-size:.6rem;color:var(--text3);letter-spacing:.04em;text-transform:uppercase;}
+.info-v{font-family:'Orbitron',sans-serif;font-size:.63rem;color:var(--text);font-weight:600;letter-spacing:.04em;}
+.info-v.danger{color:var(--red);}
+.info-v.warn{color:var(--amber);}
+.info-v.safe{color:var(--green);}
+.int-bar-wrap{margin:9px 0 7px;}
+.int-bar-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.int-bar-lbl{font-size:.58rem;color:var(--text3);text-transform:uppercase;}
+.int-bar-pct{font-family:'Orbitron',sans-serif;font-size:.66rem;font-weight:700;}
+.int-bar-pct.safe{color:var(--green);} .int-bar-pct.warn{color:var(--amber);} .int-bar-pct.danger{color:var(--red);}
+.int-track{height:5px;border-radius:3px;background:var(--bg2);overflow:hidden;}
+.int-fill{height:100%;border-radius:3px;transition:width .8s ease,background .5s;}
+.vlog{margin-top:9px;}
+.vlog-title{font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:5px;}
+.vlog-list{display:flex;flex-direction:column;gap:3px;max-height:80px;overflow-y:auto;}
+.vlog-list::-webkit-scrollbar{width:2px}
+.vlog-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.vlog-item{display:flex;align-items:flex-start;gap:6px;padding:4px 7px;border-radius:5px;background:var(--bg);font-size:.6rem;}
+.vlog-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.vlog-dot.phone{background:var(--amber);}
+.vlog-dot.tab{background:#6366f1;}
+.vlog-dot.dist{background:var(--red);}
+.vlog-time{color:var(--text3);font-family:'Orbitron',sans-serif;font-size:.5rem;min-width:30px;flex-shrink:0;margin-top:1px;}
+.vlog-msg{color:var(--text2);flex:1;line-height:1.4;}
+.details-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 12px;margin-bottom:10px;}
+.detail-item{display:flex;flex-direction:column;gap:2px;}
+.detail-val{font-family:'Orbitron',sans-serif;font-size:.58rem;color:var(--text);font-weight:600;letter-spacing:.04em;word-break:break-all;}
+.detail-val.highlight{font-size:.72rem;color:var(--M);}
+.detail-val.small-val{font-family:'DM Sans',sans-serif;font-size:.65rem;font-weight:500;}
+.divider-line{height:1px;background:var(--border);margin:8px 0;}
+.mini-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:4px;}
+.mini-stat{text-align:center;padding:6px 4px;border-radius:6px;background:var(--bg2);}
+.mini-stat-n{font-family:'Orbitron',sans-serif;font-size:.78rem;font-weight:900;color:var(--text);}
+.mini-stat-n.safe{color:var(--green);} .mini-stat-n.warn{color:var(--amber);} .mini-stat-n.danger{color:var(--red);}
+.mini-stat-l{font-size:.52rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-top:1px;}
+.empty{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:55px 20px;background:#fff;border:2px dashed var(--border);border-radius:var(--r);gap:10px;color:var(--text3);}
+.empty-icon{font-size:2.4rem;opacity:.35;}
+.empty-title{font-family:'Orbitron',sans-serif;font-size:.72rem;letter-spacing:.15em;color:var(--text3);}
+.empty-sub{font-size:.73rem;color:var(--text3);text-align:center;max-width:280px;line-height:1.6;}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;background:var(--red);color:#fff;padding:12px 18px;border-radius:10px;font-size:.7rem;font-weight:600;box-shadow:0 4px 20px rgba(220,38,38,.4);display:flex;align-items:center;gap:10px;transform:translateY(100px);opacity:0;transition:all .35s cubic-bezier(.4,0,.2,1);max-width:300px;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* ══ ROOM CODE POPUP ══ */
+.popup-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;}
+.popup-overlay.hidden{display:none;}
+.popup-box{background:#fff;border-radius:16px;padding:32px;max-width:380px;width:100%;margin:16px;box-shadow:0 20px 60px rgba(0,0,0,.2);text-align:center;animation:popIn .35s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+.popup-icon{font-size:2.5rem;margin-bottom:12px;}
+.popup-title{font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.1em;color:var(--text);margin-bottom:6px;}
+.popup-sub{font-size:.75rem;color:var(--text3);margin-bottom:22px;line-height:1.6;}
+.code-display{font-family:'Orbitron',sans-serif;font-size:2.4rem;font-weight:900;letter-spacing:.35em;color:var(--M);background:var(--M10);border:2px dashed rgba(139,0,74,.3);border-radius:12px;padding:14px 20px;margin-bottom:16px;user-select:all;}
+.popup-note{font-size:.65rem;color:var(--text3);background:var(--bg2);padding:10px 14px;border-radius:8px;line-height:1.6;margin-bottom:20px;}
+.popup-note b{color:var(--M);}
+.btn-popup-close{width:100%;padding:12px;background:var(--M);color:#fff;border:none;border-radius:8px;font-family:'Orbitron',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.12em;cursor:pointer;transition:opacity .2s;}
+.btn-popup-close:hover{opacity:.85;}
+.btn-regen{width:100%;padding:9px;background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:8px;font-size:.7rem;cursor:pointer;margin-bottom:10px;transition:all .2s;}
+.btn-regen:hover{border-color:var(--M);color:var(--M);}
+
+@media(max-width:900px){.stats-row{grid-template-columns:1fr 1fr}.students-grid{grid-template-columns:1fr}.page{padding:16px}.hdr{padding:0 16px}}
+</style>
+</head>
+<body>
+
+<!-- Room Code Popup -->
+<div class="popup-overlay" id="code-popup">
+  <div class="popup-box">
+    <div class="popup-icon">🔑</div>
+    <div class="popup-title">YOUR EXAM ROOM CODE</div>
+    <div class="popup-sub">Share this code with your students. They must enter it to join your exam session.</div>
+    <div class="code-display" id="room-code-display">------</div>
+    <div class="popup-note">This code is <b>unique to your session</b>. Only students with this code can join your proctored exam room. Code expires when you log out.</div>
+    <button class="btn-regen" onclick="generateNewCode()">↻ Generate New Code</button>
+    <button class="btn-popup-close" onclick="closeCodePopup()">ENTER DASHBOARD →</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"><span>🚨</span><span id="toast-msg">Violation detected</span></div>
+
+<!-- Header -->
+<header class="hdr">
+  <div class="hdr-l">
+    <div class="logo"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="9.2" stroke="#fff" stroke-width="1.4"/><ellipse cx="11" cy="11" rx="6" ry="3.5" stroke="#fff" stroke-width="1.2" opacity=".7"/><circle cx="11" cy="11" r="2.5" fill="#fff" opacity=".9"/></svg></div>
+    <div><div class="site-title">AI Exam <span>Proctor</span></div><div class="site-sub">FACULTY DASHBOARD</div></div>
+  </div>
+  <div class="hdr-r">
+    <div class="live-pill"><span class="ldot"></span>LIVE</div>
+    <div class="hclock" id="hclock">--:--:--</div>
+    <button class="btn-sec" onclick="showCodePopup()" style="border-color:rgba(139,0,74,.3);color:var(--M);">🔑 Room Code</button>
+    <div class="faculty-pill"><div class="faculty-avatar" id="fac-avatar">F</div><span id="fac-name">Faculty</span></div>
+    <button class="btn-logout" onclick="logOut()">← Logout</button>
+  </div>
+</header>
+
+<div class="page">
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-icon green">🎓</div><div><div class="stat-num" id="stat-active">0</div><div class="stat-lbl">Active Students</div></div></div>
+    <div class="stat-card"><div class="stat-icon red">🚨</div><div><div class="stat-num danger" id="stat-violations">0</div><div class="stat-lbl">Total Violations</div></div></div>
+    <div class="stat-card"><div class="stat-icon amber">⚠️</div><div><div class="stat-num" id="stat-flagged">0</div><div class="stat-lbl">Students Flagged</div></div></div>
+    <div class="stat-card"><div class="stat-icon maroon">🔴</div><div><div class="stat-num danger" id="stat-critical">0</div><div class="stat-lbl">Critical (5+ Alerts)</div></div></div>
+  </div>
+  <div class="sec-hdr">
+    <div class="sec-title">ACTIVE EXAM SESSIONS <span class="sec-badge" id="count-badge">0 STUDENTS</span></div>
+    <div class="sec-right">
+      <span class="refresh-timer" id="refresh-timer">Next refresh in 10s</span>
+      <button class="btn-sec" onclick="refresh()">↻ Refresh Now</button>
+    </div>
+  </div>
+  <div class="students-grid" id="students-grid">
+    <div class="empty"><div class="empty-icon">📡</div><div class="empty-title">WAITING FOR STUDENTS</div><div class="empty-sub">Students who enter your room code and start their exam will appear here.</div></div>
+  </div>
+</div>
+
+<script>
+const session=JSON.parse(sessionStorage.getItem('proctor_session')||'null');
+if(!session||session.role!=='faculty'){window.location.href='login.html';}
+const g=id=>document.getElementById(id);
+let refreshCountdown=10, prevViolationCounts={}, currentRoomCode='';
+
+window.addEventListener('load',()=>{
+  g('fac-name').textContent=session.name||'Faculty';
+  g('fac-avatar').textContent=(session.name||'F')[0].toUpperCase();
+  tickClock();setInterval(tickClock,1000);
+
+  // Generate or restore room code for this faculty session
+  const storedCode = sessionStorage.getItem('proctor_faculty_room_'+session.email);
+  if(storedCode){ currentRoomCode=storedCode; }
+  else{ currentRoomCode=generateCode(); }
+  registerRoom(currentRoomCode);
+  g('room-code-display').textContent=currentRoomCode;
+  document.getElementById('code-popup').classList.remove('hidden');
+
+  refresh();
+  setInterval(()=>{
+    refreshCountdown--;
+    g('refresh-timer').textContent='Next refresh in '+refreshCountdown+'s';
+    if(refreshCountdown<=0){refreshCountdown=10;refresh();}
+  },1000);
+});
+
+function tickClock(){g('hclock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});}
+function generateCode(){return Math.random().toString(36).substring(2,8).toUpperCase();}
+
+async function registerRoom(code){
+  sessionStorage.setItem('proctor_faculty_room_'+session.email, code);
+  try{
+    await fetch('/api/rooms/create',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({code, faculty_email:session.email, exam_name:'Exam Session'})
+    });
+  }catch(e){}
+}
+
+async function generateNewCode(){
+  currentRoomCode=generateCode();
+  sessionStorage.setItem('proctor_faculty_room_'+session.email, currentRoomCode);
+  await registerRoom(currentRoomCode);
+  g('room-code-display').textContent=currentRoomCode;
+}
+
+function showCodePopup(){document.getElementById('code-popup').classList.remove('hidden');}
+function closeCodePopup(){document.getElementById('code-popup').classList.add('hidden');}
+
+async function refresh(){
+  try{
+    const res  = await fetch('/api/dashboard/'+currentRoomCode);
+    const data = await res.json();
+    if(!data.ok) return;
+    const list = data.students || [];
+
+    const active         = list.filter(s=>s.status!=='ended');
+    const totalViolations= list.reduce((a,s)=>a+(s.violations||0),0);
+    const flagged        = list.filter(s=>(s.violations||0)>0).length;
+    const critical       = list.filter(s=>(s.violations||0)>=5).length;
+
+    g('stat-active').textContent    = active.length;
+    g('stat-violations').textContent= totalViolations;
+    g('stat-flagged').textContent   = flagged;
+    g('stat-critical').textContent  = critical;
+    g('count-badge').textContent    = list.length+' STUDENT'+(list.length!==1?'S':'');
+
+    list.forEach(s=>{
+      const prev=prevViolationCounts[s.student_id];
+      if(prev!==undefined&&(s.violations||0)>prev){
+        showToast('🚨 '+s.student_id+': '+(s.last_violation||'Violation'));
+      }
+      prevViolationCounts[s.student_id]=s.violations||0;
+    });
+
+    renderGrid(list);
+  }catch(e){
+    console.warn('Refresh failed — is the Python server running?',e);
+  }
+}
+
+function renderGrid(students){
+  const grid=g('students-grid');
+  if(students.length===0){
+    grid.innerHTML='<div class="empty"><div class="empty-icon">📡</div><div class="empty-title">WAITING FOR STUDENTS</div><div class="empty-sub">Students who enter your room code will appear here.</div></div>';
+    return;
+  }
+  students.sort((a,b)=>{const o={critical:0,warning:1,active:2,ended:3};return (o[a.status]??2)-(o[b.status]??2);});
+  grid.innerHTML=students.map(s=>buildCard(s)).join('');
+}
+
+function buildCard(s){
+  const v=s.violations||0,status=s.status||'active',integrity=s.integrity??Math.max(0,100-v*7);
+  const initials=(s.student_id||'??').substring(0,3).toUpperCase();
+  const cardClass=v===0?'clean':v>=5?'critical':'warning';
+  const statusText=status==='ended'?'ENDED':v===0?'FOCUSED':v>=5?'CRITICAL':'WARNING';
+  const intColor=integrity<55?'danger':integrity<78?'warn':'safe';
+  const intBg=integrity<55?'#dc2626':integrity<78?'#d97706':'#16a34a';
+  const loginTime = s.login_time ? new Date(s.login_time).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) : '—';
+  return '<div class="student-card '+cardClass+(status==='ended'?' ended':'')+'" id="sc-'+escHtml(s.student_id)+'">'
+    +'<div class="card-hdr">'
+      +'<div class="card-hdr-l">'
+        +'<div class="student-avatar '+cardClass+'">'+initials+'</div>'
+        +'<div>'
+          +'<div class="student-name">'+escHtml(s.student_name||'Unknown')+'</div>'
+          +'<div class="student-sub">'+escHtml(s.subject||'—')+' · '+escHtml(s.exam_id||'—')+'</div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;gap:7px;">'
+        +'<div class="violation-count '+cardClass+'">'+v+'</div>'
+        +'<div class="status-badge '+cardClass+'">'+statusText+'</div>'
+      +'</div>'
+    +'</div>'
+    +'<div class="card-body">'
+      +'<div class="details-grid">'
+        +'<div class="detail-item"><span class="info-k">Full Name</span><span class="info-v detail-val">'+escHtml(s.student_name||'—')+'</span></div>'
+        +'<div class="detail-item"><span class="info-k">College ID</span><span class="info-v detail-val highlight">'+escHtml(s.student_id||'—')+'</span></div>'
+        +'<div class="detail-item"><span class="info-k">Email</span><span class="info-v detail-val small-val">'+escHtml(s.student_email||'—')+'</span></div>'
+        +'<div class="detail-item"><span class="info-k">Subject</span><span class="info-v detail-val">'+escHtml(s.subject||'—')+'</span></div>'
+        +'<div class="detail-item"><span class="info-k">Exam ID</span><span class="info-v detail-val">'+escHtml(s.exam_id||'—')+'</span></div>'
+        +'<div class="detail-item"><span class="info-k">Joined At</span><span class="info-v detail-val">'+loginTime+'</span></div>'
+      +'</div>'
+      +'<div class="divider-line"></div>'
+      +'<div class="mini-stats">'
+        +'<div class="mini-stat"><div class="mini-stat-n '+(v>=5?'danger':v>0?'warn':'safe')+'">'+v+'</div><div class="mini-stat-l">Alerts</div></div>'
+        +'<div class="mini-stat"><div class="mini-stat-n">'+integrity+'%</div><div class="mini-stat-l">Integrity</div></div>'
+        +'<div class="mini-stat"><div class="mini-stat-n">'+loginTime+'</div><div class="mini-stat-l">Joined</div></div>'
+        +'<div class="mini-stat"><div class="mini-stat-n '+(status==='critical'?'danger':status==='warning'?'warn':'safe')+'">'+statusText+'</div><div class="mini-stat-l">Status</div></div>'
+      +'</div>'
+      +'<div class="int-track" style="margin:6px 0 10px;"><div class="int-fill" style="width:'+integrity+'%;background:'+intBg+';"></div></div>'
+    +'</div>'
+  +'</div>';
+}
+
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+let toastTimer;
+function showToast(msg){const t=g('toast');g('toast-msg').textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),5000);}
+
+function logOut(){
+  sessionStorage.removeItem('proctor_session');
+  sessionStorage.removeItem('proctor_faculty_room_'+session.email);
+  window.location.href='login.html';
+}
+</script>
+</body>
+</html>

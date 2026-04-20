@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI Exam Proctor — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0b0b0b;--P:#F2EFE7;--P55:rgba(242,239,231,.55);--P30:rgba(242,239,231,.30);--P12:rgba(242,239,231,.12);--P07:rgba(242,239,231,.07);--P04:rgba(242,239,231,.04);--Pglow:rgba(242,239,231,.22);--M:#8B004A;--M50:rgba(139,0,74,.50);--M25:rgba(139,0,74,.25);--M10:rgba(139,0,74,.10);--Mglow:rgba(139,0,74,.35);--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--glass:rgba(255,255,255,.03);--gborder:rgba(242,239,231,.08);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--P);font-family:'DM Sans',sans-serif;display:flex;align-items:flex-start;justify-content:center;min-height:100vh;overflow-y:auto;padding:20px 0;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(var(--P07) 1px,transparent 1px),linear-gradient(90deg,var(--P07) 1px,transparent 1px);background-size:44px 44px;opacity:.3;}
+body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 60% 50% at 50% 40%,rgba(139,0,74,.13) 0%,transparent 70%);}
+.corner{position:fixed;width:90px;height:90px;z-index:1;pointer-events:none;}
+.corner.tl{top:18px;left:18px;border-top:1px solid var(--M25);border-left:1px solid var(--M25);}
+.corner.tr{top:18px;right:18px;border-top:1px solid var(--M25);border-right:1px solid var(--M25);}
+.corner.bl{bottom:18px;left:18px;border-bottom:1px solid var(--M25);border-left:1px solid var(--M25);}
+.corner.br{bottom:18px;right:18px;border-bottom:1px solid var(--M25);border-right:1px solid var(--M25);}
+.wrap{position:relative;z-index:10;width:100%;max-width:480px;padding:0 16px;display:flex;flex-direction:column;align-items:center;animation:fadeUp .6s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.logo-area{text-align:center;margin-bottom:22px;}
+.logo-ring{width:58px;height:58px;border-radius:50%;border:1px solid var(--P30);display:flex;align-items:center;justify-content:center;margin:0 auto 11px;position:relative;box-shadow:0 0 26px var(--Mglow);}
+.logo-ring::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:1px solid transparent;border-top-color:var(--M);animation:spin 5s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.logo-title{font-family:'Orbitron',sans-serif;font-size:1.15rem;font-weight:900;letter-spacing:.1em;color:var(--P);}
+.logo-title span{color:var(--M);}
+.logo-sub{font-size:.62rem;letter-spacing:.18em;color:var(--M);font-family:'Orbitron',sans-serif;margin-top:2px;}
+.role-tabs{display:flex;width:100%;background:rgba(255,255,255,.03);border:1px solid var(--gborder);border-radius:10px;padding:4px;margin-bottom:18px;gap:4px;}
+.role-tab{flex:1;padding:9px;border-radius:7px;border:none;background:transparent;font-family:'Orbitron',sans-serif;font-size:.57rem;font-weight:700;letter-spacing:.12em;color:var(--P55);cursor:pointer;transition:all .25s;}
+.role-tab.active{background:var(--M);color:var(--P);box-shadow:0 0 13px var(--Mglow);}
+.role-tab:not(.active):hover{background:rgba(255,255,255,.05);color:var(--P);}
+.card{width:100%;background:rgba(255,255,255,.025);backdrop-filter:blur(24px);border:1px solid var(--gborder);border-radius:16px;padding:24px;box-shadow:0 0 50px rgba(139,0,74,.07);}
+.form-section{display:none;}
+.form-section.active{display:block;animation:fadeIn .3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.form-title{font-family:'Orbitron',sans-serif;font-size:.62rem;letter-spacing:.2em;color:var(--M);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--M25);}
+.step{display:none;}
+.step.active{display:block;animation:fadeIn .3s ease;}
+.field{margin-bottom:13px;}
+.field label{display:block;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(242,239,231,.38);margin-bottom:5px;}
+.field input,.field select{width:100%;padding:10px 13px;background:rgba(255,255,255,.04);border:1px solid var(--gborder);border-radius:8px;color:var(--P);font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;transition:border-color .2s,box-shadow .2s;}
+.field input:focus{border-color:var(--M50);box-shadow:0 0 0 3px rgba(139,0,74,.12);}
+.field input::placeholder{color:rgba(242,239,231,.2);}
+.field input:disabled{opacity:.45;cursor:not-allowed;}
+.err{font-size:.65rem;color:var(--red);margin-top:-7px;margin-bottom:11px;padding:7px 10px;border-radius:6px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18);display:none;}
+.err.show{display:block;}
+.succ{font-size:.65rem;color:var(--green);margin-bottom:11px;padding:7px 10px;border-radius:6px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.22);display:none;}
+.succ.show{display:block;}
+.btn-submit{width:100%;padding:12px;border:1px solid var(--M50);border-radius:8px;background:linear-gradient(135deg,var(--M) 0%,rgba(139,0,74,.7) 100%);color:var(--P);font-family:'Orbitron',sans-serif;font-size:.63rem;font-weight:700;letter-spacing:.16em;cursor:pointer;transition:all .25s;box-shadow:0 0 16px rgba(139,0,74,.26);margin-top:3px;}
+.btn-submit:hover{box-shadow:0 0 28px rgba(139,0,74,.44);transform:translateY(-1px);}
+.btn-submit:disabled{opacity:.38;cursor:not-allowed;transform:none;}
+.btn-back{width:100%;padding:8px;border:1px solid var(--gborder);border-radius:8px;background:transparent;color:rgba(242,239,231,.36);font-family:'DM Sans',sans-serif;font-size:.7rem;cursor:pointer;transition:all .2s;margin-top:7px;}
+.btn-back:hover{border-color:var(--P30);color:var(--P);}
+.info-note{font-size:.62rem;color:rgba(242,239,231,.28);text-align:center;margin-top:10px;line-height:1.6;}
+.info-note b{color:var(--M);cursor:pointer;}
+.fac-tabs{display:flex;margin-bottom:14px;border:1px solid var(--gborder);border-radius:8px;overflow:hidden;}
+.fac-tab{flex:1;padding:8px;border:none;background:transparent;color:var(--P55);font-family:'DM Sans',sans-serif;font-size:.7rem;cursor:pointer;transition:all .2s;}
+.fac-tab.active{background:rgba(139,0,74,.15);color:var(--P);}
+.status-bar{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:16px;font-size:.54rem;letter-spacing:.12em;color:rgba(242,239,231,.28);font-family:'Orbitron',sans-serif;}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:blink 1.5s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+</style>
+</head>
+<body>
+<div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+<div class="wrap">
+<div class="logo-area">
+  <div class="logo-ring"><svg width="24" height="24" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="11" stroke="#F2EFE7" stroke-width="1.4" opacity=".6"/><ellipse cx="14" cy="14" rx="8" ry="5" stroke="#F2EFE7" stroke-width="1.2" opacity=".4"/><circle cx="14" cy="14" r="3" fill="#F2EFE7" opacity=".9"/><circle cx="14" cy="14" r="1.2" fill="#8B004A"/></svg></div>
+  <div class="logo-title">AI Exam <span>Proctor</span></div>
+  <div class="logo-sub">SECURE EXAMINATION SYSTEM</div>
+</div>
+<div class="role-tabs">
+  <button class="role-tab active" id="tab-student" onclick="switchRole('student')">🎓 &nbsp;STUDENT</button>
+  <button class="role-tab" id="tab-faculty" onclick="switchRole('faculty')">👨‍🏫 &nbsp;FACULTY</button>
+</div>
+<div class="card">
+
+  <!-- STUDENT -->
+  <div class="form-section active" id="form-student">
+    <div class="form-title">STUDENT SIGN IN</div>
+    <div class="step active" id="s-step1">
+      <div class="field"><label>Full Name</label><input type="text" id="s-name" placeholder="Enter your full name" autocomplete="off"/></div>
+      <div class="field"><label>College ID</label><input type="text" id="s-id" placeholder="e.g. 23CS401" autocomplete="off"/></div>
+      <div class="field"><label>Subject</label><input type="text" id="s-subject" placeholder="e.g. Data Structures" autocomplete="off"/></div>
+      <div class="field"><label>Room / Exam Code (from Faculty)</label><input type="text" id="s-code" placeholder="Enter 6-digit code" maxlength="6" autocomplete="off" style="letter-spacing:.2em;font-family:'Orbitron',sans-serif;font-size:1rem;text-transform:uppercase;"/></div>
+      <div class="field"><label>Email Address</label><input type="email" id="s-email" placeholder="your@email.com" autocomplete="off"/></div>
+      <div class="field"><label>Password</label><input type="password" id="s-password" placeholder="••••••••"/></div>
+      <div class="err" id="s-err1">Please fill all fields correctly.</div>
+      <button class="btn-submit" onclick="studentLogin()">JOIN EXAM SESSION →</button>
+    </div>
+
+  </div>
+
+  <!-- FACULTY -->
+  <div class="form-section" id="form-faculty">
+    <div class="form-title">FACULTY ACCESS</div>
+    <div class="fac-tabs">
+      <button class="fac-tab active" id="fac-tab-login" onclick="facTab('login')">Sign In</button>
+      <button class="fac-tab" id="fac-tab-reg" onclick="facTab('register')">Create Account</button>
+    </div>
+    <div class="step active" id="f-login">
+      <div class="field"><label>Email Address</label><input type="email" id="f-email" placeholder="your@email.com" autocomplete="off"/></div>
+      <div class="field"><label>Password</label><input type="password" id="f-pass" placeholder="••••••••"/></div>
+      <div class="err" id="f-err">Email or password is incorrect.</div>
+      <button class="btn-submit" onclick="facultyLogin()">ACCESS DASHBOARD →</button>
+      <div class="info-note">No account? <b onclick="facTab('register')">Create one →</b></div>
+    </div>
+    <div class="step" id="f-register">
+      <div class="field"><label>Full Name</label><input type="text" id="f-reg-name" placeholder="Prof. Your Name" autocomplete="off"/></div>
+      <div class="field"><label>Email Address</label><input type="email" id="f-reg-email" placeholder="your@email.com" autocomplete="off"/></div>
+      <div class="field"><label>Password (min 6 chars)</label><input type="password" id="f-reg-pass" placeholder="Create a password"/></div>
+      <div class="field"><label>Confirm Password</label><input type="password" id="f-reg-pass2" placeholder="Repeat password"/></div>
+      <div class="err" id="f-reg-err">Please check your inputs.</div>
+      <div class="succ" id="f-reg-succ">✓ Account created! Signing you in…</div>
+      <button class="btn-submit" onclick="facultyRegister()">CREATE ACCOUNT →</button>
+      <div class="info-note">Have account? <b onclick="facTab('login')">Sign in →</b></div>
+    </div>
+  </div>
+
+</div>
+<div class="status-bar"><span class="sdot"></span>SYSTEM ONLINE · AI PROCTORING READY</div>
+</div>
+
+<script>
+function switchRole(r){['student','faculty'].forEach(x=>{document.getElementById('tab-'+x).classList.toggle('active',x===r);document.getElementById('form-'+x).classList.toggle('active',x===r);});}
+function facTab(t){['login','register'].forEach(x=>{document.getElementById('fac-tab-'+(x==='login'?'login':'reg')).classList.toggle('active',x===t);document.getElementById('f-'+(x==='login'?'login':'register')).classList.toggle('active',x===t);});}
+function showErr(id,msg){const e=document.getElementById(id);e.textContent=msg;e.classList.add('show');}
+function clearErr(id){document.getElementById(id).classList.remove('show');}
+
+async function studentLogin(){
+  clearErr('s-err1');
+  const name    = document.getElementById('s-name').value.trim();
+  const id      = document.getElementById('s-id').value.trim();
+  const subject = document.getElementById('s-subject').value.trim();
+  const code    = document.getElementById('s-code').value.trim().toUpperCase();
+  const email   = document.getElementById('s-email').value.trim();
+  const pass    = document.getElementById('s-password').value;
+  if(!name||!id||!subject||!code||!email||!pass){showErr('s-err1','Please fill in all fields.');return;}
+  if(id.length<3){showErr('s-err1','College ID too short.');return;}
+  if(code.length!==6){showErr('s-err1','Room code must be 6 characters.');return;}
+  if(!email.includes('@')){showErr('s-err1','Invalid email address.');return;}
+  if(pass.length<6){showErr('s-err1','Password must be at least 6 characters.');return;}
+  const btn=document.querySelector('#form-student .btn-submit');
+  btn.disabled=true; btn.textContent='Joining…';
+  try{
+    const res = await fetch('/api/student/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name,id,subject,code,email,password:pass})
+    });
+    const data = await res.json();
+    if(!data.ok){showErr('s-err1', data.msg||'Login failed.');btn.disabled=false;btn.textContent='JOIN EXAM SESSION →';return;}
+    // Store session in sessionStorage (tab-scoped, not shared)
+    sessionStorage.setItem('proctor_session', JSON.stringify(data.session));
+    window.location.href='index.html';
+  }catch(e){
+    showErr('s-err1','Server error. Is the Python server running?');
+    btn.disabled=false; btn.textContent='JOIN EXAM SESSION →';
+  }
+}
+
+async function facultyLogin(){
+  clearErr('f-err');
+  const email = document.getElementById('f-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('f-pass').value;
+  if(!email||!pass){showErr('f-err','Please enter email and password.');return;}
+  const btn=document.querySelector('#f-login .btn-submit');
+  btn.disabled=true; btn.textContent='Signing in…';
+  try{
+    const res = await fetch('/api/faculty/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email,password:pass})
+    });
+    const data = await res.json();
+    if(!data.ok){showErr('f-err', data.msg||'Login failed.');btn.disabled=false;btn.textContent='ACCESS DASHBOARD →';return;}
+    sessionStorage.setItem('proctor_session', JSON.stringify({role:'faculty',name:data.name,email:data.email,loginTime:new Date().toISOString()}));
+    window.location.href='faculty.html';
+  }catch(e){
+    showErr('f-err','Server error. Is the Python server running?');
+    btn.disabled=false; btn.textContent='ACCESS DASHBOARD →';
+  }
+}
+
+async function facultyRegister(){
+  clearErr('f-reg-err');document.getElementById('f-reg-succ').classList.remove('show');
+  const name  = document.getElementById('f-reg-name').value.trim();
+  const email = document.getElementById('f-reg-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('f-reg-pass').value;
+  const pass2 = document.getElementById('f-reg-pass2').value;
+  if(!name||!email||!pass||!pass2){showErr('f-reg-err','Fill in all fields.');return;}
+  if(!email.includes('@')){showErr('f-reg-err','Invalid email.');return;}
+  if(pass.length<6){showErr('f-reg-err','Password must be at least 6 characters.');return;}
+  if(pass!==pass2){showErr('f-reg-err','Passwords do not match.');return;}
+  const btn=document.querySelector('#f-register .btn-submit');
+  btn.disabled=true; btn.textContent='Creating…';
+  try{
+    const res = await fetch('/api/faculty/register',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name,email,password:pass})
+    });
+    const data = await res.json();
+    if(!data.ok){showErr('f-reg-err', data.msg||'Registration failed.');btn.disabled=false;btn.textContent='CREATE ACCOUNT →';return;}
+    document.getElementById('f-reg-succ').classList.add('show');
+    setTimeout(()=>{facTab('login');document.getElementById('f-email').value=email;},1500);
+    btn.disabled=false; btn.textContent='CREATE ACCOUNT →';
+  }catch(e){
+    showErr('f-reg-err','Server error. Is the Python server running?');
+    btn.disabled=false; btn.textContent='CREATE ACCOUNT →';
+  }
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  if(document.getElementById('form-faculty').classList.contains('active')){
+    if(document.getElementById('f-login').classList.contains('active'))facultyLogin();else facultyRegister();
+  }else{
+    studentLogin();
+  }
+});
+</script>
+</body>
+</html>
