@@ -7,13 +7,12 @@ your-project/
 ├── app.py                  ← Python Flask backend (RUN THIS)
 ├── requirements.txt        ← Python libraries
 ├── proctor.db              ← SQLite database (auto-created)
-└── static/                 ← ALL your HTML/JS/CSS files go here
-    ├── login.html
-    ├── index.html
-    ├── faculty.html
-    ├── phone-cam.html
-    ├── freesound_community-siren-alert-96052.mp3
-    └── model/
+├── login.html
+├── index.html
+├── faculty.html
+├── phone-cam.html
+├── freesound_community-siren-alert-96052.mp3
+└── model/
         ├── model.json
         ├── weights.bin
         └── metadata.json
@@ -25,9 +24,8 @@ your-project/
 pip install -r requirements.txt
 ```
 
-## Step 2 — Put Files in /static Folder
+## Step 2 — Keep Files as it is
 
-Copy these files into the `static/` folder:
 - login.html
 - index.html
 - faculty.html
