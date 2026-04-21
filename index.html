@@ -338,6 +338,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
       <div class="chip" id="chip-face"><i class="cd g"></i>Face Detected</div>
       <div class="chip" id="chip-gaze"><i class="cd a"></i>Gaze: Forward</div>
       <div class="chip" id="chip-conf"><i class="cd g"></i>Conf: —</div>
+      <div class="chip" id="chip-phone-status" style="display:none"><i class="cd g"></i>📱 Live</div>
     </div>
     <div id="result" class="result-card" style="margin-top:7px;">
       <span class="res-ico">🔒</span>
@@ -701,6 +702,9 @@ function startExam(){
     labelBuffer=[];
     startPhoneFrameLoop();
     addLog('Phone camera active — PC model running.','ok');
+    // Show phone live status chip
+    const ps = g('chip-phone-status');
+    if(ps){ ps.style.display='flex'; ps.classList.add('lit'); ps.innerHTML='<i class="cd g"></i>📱 Live'; }
   } else {
     initCam();
   }
@@ -839,20 +843,21 @@ function closeQRPopup(){ g('qr-ov').classList.remove('show'); }
    RECEIVE FRAMES FROM PHONE
    Draw onto phoneCanvas (224×224) for model prediction
 ════════════════════ */
+// Track last frame time — used to detect phone screen off / background
+let lastFrameTime = 0;
+
 function receiveFrame(data){
   if(!phoneCanvas||!phoneCtx) return;
-  // PeerJS binary serialization sends ArrayBuffer, not Blob
-  // Must convert ArrayBuffer → Blob before createObjectURL
+  lastFrameTime = Date.now(); // ← update every time a frame arrives
   let blob;
   if(data instanceof Blob){
     blob = data;
   } else if(data instanceof ArrayBuffer){
     blob = new Blob([data], {type:'image/jpeg'});
   } else if(data && data.buffer instanceof ArrayBuffer){
-    // Uint8Array or similar typed array
     blob = new Blob([data.buffer], {type:'image/jpeg'});
   } else {
-    return; // unknown type, skip
+    return;
   }
   const url=URL.createObjectURL(blob);
   const img=new Image();
@@ -860,7 +865,6 @@ function receiveFrame(data){
     phoneCtx.clearRect(0,0,224,224);
     phoneCtx.drawImage(img,0,0,224,224);
     URL.revokeObjectURL(url);
-    // Also draw to calibration preview if cal overlay is open
     if(calCanvas2d && g('cal-ov').classList.contains('show')){
       calCanvas2d.clearRect(0,0,160,120);
       calCanvas2d.drawImage(img,0,0,160,120);
@@ -1027,12 +1031,55 @@ function handleCalibratedPrediction(preds){
 function startPhoneFrameLoop(){
   if(phoneFrameLoop) clearInterval(phoneFrameLoop);
   labelBuffer=[];
+  lastFrameTime = Date.now(); // initialise
+
+  // ── PHONE SCREEN OFF / BACKGROUND DETECTOR ──
+  // If no frame arrives for 4 seconds → phone screen turned off
+  // or student minimized camera to use another app
+  const FREEZE_TIMEOUT = 4000; // 4 seconds no frame = suspicious
+  let phoneFreezeCooldown = false;
+
   phoneFrameLoop=setInterval(async()=>{
     if(!S.running){clearInterval(phoneFrameLoop);return;}
     if(!S.tmModel||!phoneCanvas) return;
+
+    // ── Check if phone stopped sending frames ──
+    const timeSinceLastFrame = Date.now() - lastFrameTime;
+    if(lastFrameTime > 0 && timeSinceLastFrame > FREEZE_TIMEOUT){
+      // Phone camera frozen — screen off or backgrounded
+      if(!phoneFreezeCooldown && S.mods.focus){
+        phoneFreezeCooldown = true;
+
+        // Update phone status chip
+        const ps = g('chip-phone-status');
+        if(ps){ ps.innerHTML='<i class="cd r"></i>📵 Offline'; }
+
+        // Show alert on student screen
+        setChip('chip-gaze','r','Phone Offline!');
+        g('face-label').textContent='📵 PHONE SCREEN OFF';
+        g('face-label').style.color='var(--red)';
+        setFaceRect(true);
+
+        // Raise violation alert
+        raiseAlert('Phone screen turned off — possible AI tool use!');
+        addLog('📵 Phone screen turned off or camera backgrounded!','warn');
+
+        // Reset cooldown after 8 seconds
+        setTimeout(()=>{
+          phoneFreezeCooldown=false;
+          // Restore chip when frames resume
+          if(Date.now()-lastFrameTime < FREEZE_TIMEOUT){
+            const ps2=g('chip-phone-status');
+            if(ps2){ ps2.innerHTML='<i class="cd g"></i>📱 Live'; }
+          }
+        }, 8000);
+      }
+      return; // skip model prediction while frozen
+    }
+
+    // Phone is sending frames normally — run model
     try{
       const preds=await S.tmModel.predict(phoneCanvas);
-      // Use calibrated handler (it handles no-calibration fallback too)
       handleCalibratedPrediction(preds);
     }catch(e){}
   },500);
