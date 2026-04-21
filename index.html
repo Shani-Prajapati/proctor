@@ -492,16 +492,19 @@ function handlePrediction(preds){
     // Still building consensus — just update display without triggering alerts
     if(label.includes('focused')){onFocusedDisplay();}
     else if(label.includes('distracted')){onDistractedDisplay();}
-    else if(label.includes('phone')&&confNum>=55){onPhoneDisplay();}
+    else if(label.includes('phone')&&confNum>=90){onPhoneDisplay();}
     return;
   }
 
   // Stable confirmed label — now trigger actual alerts
   if(stableLabel.includes('focused')){
     onFocused(conf);
-  } else if(stableLabel.includes('phone')&&confNum>=55){
+  } else if(stableLabel.includes('phone')&&confNum>=90){
+    // Require 90% confidence for phone on desktop webcam
+    // to avoid false positives when student looks left/right
     onPhone(conf);
-  } else if(stableLabel.includes('distracted')||(stableLabel.includes('phone')&&confNum<55)){
+  } else if(stableLabel.includes('distracted')||(stableLabel.includes('phone')&&confNum<90)){
+    // Treat low-confidence "phone" as distracted on desktop
     onDistracted(conf);
   }
 
@@ -789,8 +792,10 @@ function openQRPopup(){
   if(pcPeer){try{pcPeer.destroy();}catch(e){} pcPeer=null;}
   pcPeer = new Peer({debug:0});
   pcPeer.on('open', peerId=>{
-    const base=window.location.href.replace(/\/[^\/]*$/,'/');
-    const url=base+'phone-cam.html?pid='+encodeURIComponent(peerId);
+    // Build URL that works on both GitHub Pages and localhost
+    const origin = window.location.origin;
+    const path   = window.location.pathname.replace(/\/[^\/]*$/, '/');
+    const url    = origin + path + 'phone-cam.html?pid=' + encodeURIComponent(peerId);
     try{
       new QRCode(g('qr-box'),{text:url,width:164,height:164,colorDark:'#1a0010',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
     }catch(e){

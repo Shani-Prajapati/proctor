@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<title>AI Proctor — Phone Camera</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+:root{--bg:#0b0b0b;--M:#8B004A;--Mglow:rgba(139,0,74,.35);--P:#F2EFE7;--P55:rgba(242,239,231,.55);--green:#22c55e;--red:#ef4444;--amber:#f59e0b;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--P);font-family:'DM Sans',sans-serif;overflow:hidden;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(242,239,231,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(242,239,231,.04) 1px,transparent 1px);background-size:40px 40px;}
+
+/* Camera */
+#cam-wrap{position:fixed;inset:0;z-index:1;display:none;}
+#cam-wrap.show{display:block;}
+#video{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
+#display-canvas{position:absolute;inset:0;width:100%;height:100%;transform:scaleX(-1);}
+#cap-canvas{display:none;}
+
+/* HUD TOP */
+.hud-top{position:absolute;top:0;left:0;right:0;z-index:10;padding:12px 16px;background:linear-gradient(180deg,rgba(0,0,0,.9),transparent);display:flex;align-items:center;justify-content:space-between;}
+.hud-title{font-family:'Orbitron',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.1em;}
+.hud-title span{color:var(--M);}
+.hud-badge{font-family:'Orbitron',sans-serif;font-size:.5rem;letter-spacing:.12em;padding:4px 11px;border-radius:20px;border:1px solid rgba(34,197,94,.4);background:rgba(34,197,94,.09);color:var(--green);display:flex;align-items:center;gap:5px;}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.4s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* Face guide */
+#face-rect{position:absolute;top:12%;left:6%;right:6%;bottom:20%;border:2px solid var(--M);border-radius:14px;box-shadow:0 0 24px var(--Mglow);z-index:5;}
+.cb{position:absolute;width:22px;height:22px;border-color:var(--P55);border-style:solid;}
+.cb.tl{top:-2px;left:-2px;border-width:2px 0 0 2px;border-radius:4px 0 0 0;}
+.cb.tr{top:-2px;right:-2px;border-width:2px 2px 0 0;border-radius:0 4px 0 0;}
+.cb.bl{bottom:-2px;left:-2px;border-width:0 0 2px 2px;border-radius:0 0 0 4px;}
+.cb.br{bottom:-2px;right:-2px;border-width:0 2px 2px 0;border-radius:0 0 4px 0;}
+.scanline{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(139,0,74,.6),transparent);opacity:0;z-index:6;animation:scan 3s linear infinite;}
+@keyframes scan{0%{top:0;opacity:0}4%{opacity:.45}96%{opacity:.45}100%{top:100%;opacity:0}}
+
+/* HUD BOTTOM */
+.hud-bottom{position:absolute;bottom:0;left:0;right:0;z-index:10;padding:14px 18px 28px;background:linear-gradient(0deg,rgba(0,0,0,.92),transparent);}
+.status-lbl{font-family:'Orbitron',sans-serif;font-size:.88rem;font-weight:700;letter-spacing:.08em;text-align:center;margin-bottom:8px;color:var(--green);}
+.fps-lbl{font-family:'Orbitron',sans-serif;font-size:.52rem;letter-spacing:.1em;color:rgba(242,239,231,.28);text-align:center;margin-bottom:10px;}
+.chips{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;}
+.chip{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;border:1px solid rgba(242,239,231,.07);background:rgba(255,255,255,.025);font-size:.56rem;letter-spacing:.04em;color:rgba(242,239,231,.3);}
+.chip.lit{color:var(--P);border-color:rgba(242,239,231,.15);}
+.cd{width:5px;height:5px;border-radius:50%;}
+.cd.g{background:var(--green);}.cd.a{background:var(--amber);}.cd.r{background:var(--red);}
+
+/* Instruction */
+.instr{position:absolute;top:15%;left:0;right:0;z-index:9;text-align:center;font-family:'Orbitron',sans-serif;font-size:.55rem;letter-spacing:.07em;color:rgba(242,239,231,.45);pointer-events:none;}
+
+/* LOADING */
+#loading-screen{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:28px;text-align:center;}
+.logo-ring{width:54px;height:54px;border-radius:50%;border:1px solid rgba(242,239,231,.3);display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 0 22px var(--Mglow);}
+.logo-ring::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:1px solid transparent;border-top-color:var(--M);animation:spin 3s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-title{font-family:'Orbitron',sans-serif;font-size:.82rem;font-weight:700;letter-spacing:.1em;}
+.load-row{font-family:'Orbitron',sans-serif;font-size:.52rem;letter-spacing:.1em;padding:8px 16px;border-radius:6px;border:1px solid rgba(242,239,231,.08);color:rgba(242,239,231,.28);background:rgba(255,255,255,.02);min-width:240px;text-align:center;transition:all .3s;}
+.load-row.ok{color:var(--green);border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.05);}
+.load-row.err{color:var(--red);border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.04);}
+.load-row.wait{color:var(--amber);border-color:rgba(245,158,11,.3);}
+.load-hint{font-size:.6rem;color:rgba(242,239,231,.26);line-height:1.65;max-width:260px;}
+
+/* ERROR */
+#error-screen{position:fixed;inset:0;z-index:200;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:28px;text-align:center;}
+#error-screen.show{display:flex;}
+.err-icon{font-size:2.6rem;}
+.err-title{font-family:'Orbitron',sans-serif;font-size:.8rem;letter-spacing:.1em;color:var(--red);}
+.err-msg{font-size:.68rem;color:rgba(242,239,231,.42);line-height:1.75;max-width:290px;white-space:pre-line;}
+.btn-retry{padding:11px 26px;border:1px solid rgba(139,0,74,.5);border-radius:8px;background:linear-gradient(135deg,rgba(139,0,74,.2),rgba(139,0,74,.05));color:var(--P);font-family:'Orbitron',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:.1em;cursor:pointer;margin-top:4px;}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="logo-ring">
+    <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+      <circle cx="14" cy="14" r="11" stroke="#F2EFE7" stroke-width="1.4" opacity=".6"/>
+      <circle cx="14" cy="14" r="3" fill="#F2EFE7" opacity=".9"/>
+      <circle cx="14" cy="14" r="1.2" fill="#8B004A"/>
+    </svg>
+  </div>
+  <div class="load-title">AI Exam <span style="color:#8B004A">Proctor</span></div>
+  <div class="load-row" id="ls-peer">⏳ CONNECTING TO PC…</div>
+  <div class="load-row" id="ls-cam">⏳ STARTING CAMERA…</div>
+  <div class="load-hint">Phone sends video to PC.<br/>PC model detects — no processing on phone.</div>
+</div>
+
+<!-- ERROR -->
+<div id="error-screen">
+  <div class="err-icon">⚠️</div>
+  <div class="err-title">SETUP ERROR</div>
+  <div class="err-msg" id="err-msg">Something went wrong.</div>
+  <button class="btn-retry" onclick="location.reload()">↺ Retry</button>
+</div>
+
+<!-- CAMERA VIEW -->
+<div id="cam-wrap">
+  <video id="video" autoplay muted playsinline></video>
+  <canvas id="display-canvas"></canvas>
+  <!-- 224×224 capture canvas — always upright — sent to PC -->
+  <canvas id="cap-canvas" width="224" height="224"></canvas>
+  <div class="scanline"></div>
+  <div id="face-rect">
+    <b class="cb tl"></b><b class="cb tr"></b><b class="cb bl"></b><b class="cb br"></b>
+  </div>
+  <div class="instr">Keep your face centred · Look at your screen</div>
+  <div class="hud-top">
+    <div class="hud-title">AI Exam <span>Proctor</span></div>
+    <div class="hud-badge"><span class="ldot"></span>STREAMING</div>
+  </div>
+  <div class="hud-bottom">
+    <div class="status-lbl">📡 Streaming to PC</div>
+    <div class="fps-lbl" id="fps-lbl">Frames: 0</div>
+    <div class="chips">
+      <div class="chip lit" id="chip-peer"><i class="cd g"></i>PC Connected</div>
+      <div class="chip lit" id="chip-cam"><i class="cd g"></i>Camera On</div>
+      <div class="chip" id="chip-orient"><i class="cd g"></i>Portrait ✓</div>
+      <div class="chip" id="chip-fps"><i class="cd g"></i>2 FPS</div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const params     = new URLSearchParams(window.location.search);
+const PC_PEER_ID = params.get('pid') || '';
+const g          = id => document.getElementById(id);
+
+function setRow(id, state, msg){
+  const el = g(id);
+  el.textContent = msg;
+  el.className   = 'load-row' + (state ? ' '+state : '');
+}
+function showErr(msg){
+  g('loading-screen').style.display = 'none';
+  g('error-screen').classList.add('show');
+  g('err-msg').textContent = msg;
+}
+
+let phonePeer     = null;
+let pcConn        = null;
+let videoEl       = null;
+let displayCanvas = null;
+let displayCtx    = null;
+let capCanvas     = null;
+let capCtx        = null;
+let deviceAngle   = 0;
+let totalFrames   = 0;
+let streamLoop    = null;
+
+/* ── STEP 1: CONNECT TO PC ── */
+function connectToPeer(){
+  if(!PC_PEER_ID){
+    showErr('No PC Peer ID found.\nPlease scan the QR code again from the exam page.\n\nMake sure you clicked "📱 Get Camera" on PC first.');
+    return;
+  }
+  setRow('ls-peer','wait','⏳ Connecting to PC…');
+  phonePeer = new Peer({debug:0});
+  phonePeer.on('open', ()=>{
+    const conn = phonePeer.connect(PC_PEER_ID, {reliable:false, serialization:'raw'});
+    pcConn = conn;
+    conn.on('open', ()=>{
+      setRow('ls-peer','ok','✅ PC CONNECTED');
+      startCamera();
+    });
+    conn.on('data', data=>{
+      if(data && data.cmd==='stop') stopStream();
+    });
+    conn.on('close', ()=>{ g('chip-peer').innerHTML='<i class="cd r"></i>PC Disconnected'; stopStream(); });
+    conn.on('error', ()=>{ showErr('Connection to PC lost.\nReopen QR on PC and scan again.'); });
+  });
+  phonePeer.on('error', e=>{
+    setRow('ls-peer','err','✗ '+e.type);
+    if(e.type==='peer-unavailable'){
+      showErr('Cannot reach PC.\n\n1. Keep index.html open on PC\n2. Click "📱 Get Camera"\n3. Scan the new QR code\n\nThe QR popup must be open on PC.');
+    } else {
+      showErr('PeerJS error: '+e.type+'\n\nReload and try again.');
+    }
+  });
+}
+
+/* ── STEP 2: START CAMERA ── */
+async function startCamera(){
+  setRow('ls-cam','wait','⏳ Starting camera…');
+  try{
+    if(screen.orientation && screen.orientation.lock){
+      screen.orientation.lock('portrait').catch(()=>{});
+    }
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:'user', width:{ideal:480}, height:{ideal:640} },
+      audio: false
+    });
+    videoEl = g('video');
+    videoEl.srcObject = stream;
+    await new Promise(r=>{ videoEl.onloadedmetadata=r; });
+    await videoEl.play();
+    setRow('ls-cam','ok','✅ CAMERA ACTIVE');
+    launch();
+  } catch(e){
+    setRow('ls-cam','err','✗ CAMERA: '+e.message);
+    showErr('Camera access denied.\nAllow camera permission in browser settings and reload.');
+  }
+}
+
+/* ── ORIENTATION ── */
+function getAngle(){
+  if(typeof screen.orientation!=='undefined') return screen.orientation.angle||0;
+  return typeof window.orientation!=='undefined' ? window.orientation : 0;
+}
+function listenOrientation(){
+  const update=()=>{
+    deviceAngle=getAngle();
+    const chip=g('chip-orient');
+    chip.classList.add('lit');
+    chip.innerHTML=(deviceAngle===0||deviceAngle===180)
+      ? '<i class="cd g"></i>Portrait ✓'
+      : '<i class="cd a"></i>Rotate phone upright';
+  };
+  if(screen.orientation) screen.orientation.addEventListener('change',()=>setTimeout(update,250));
+  window.addEventListener('orientationchange',()=>setTimeout(update,250));
+  update();
+}
+
+/* ── CANVAS DRAW LOOP ──
+   display-canvas: full-screen preview (mirrored for selfie feel)
+   cap-canvas: 224×224 upright frame → sent to PC model
+   
+   KEY: cap-canvas applies INVERSE rotation when phone tilts.
+   PC model always receives an upright 224×224 face image.
+*/
+function startCanvasLoop(){
+  displayCanvas = g('display-canvas');
+  displayCtx    = displayCanvas.getContext('2d');
+  capCanvas     = g('cap-canvas');
+  capCtx        = capCanvas.getContext('2d');
+
+  function resize(){
+    displayCanvas.width  = window.innerWidth;
+    displayCanvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function draw(){
+    requestAnimationFrame(draw);
+    if(!videoEl||videoEl.readyState<2||!videoEl.videoWidth) return;
+    const vw=videoEl.videoWidth, vh=videoEl.videoHeight;
+    const dw=displayCanvas.width, dh=displayCanvas.height;
+    const a=deviceAngle;
+
+    /* Display canvas — cover fit with orientation correction */
+    displayCtx.save();
+    displayCtx.clearRect(0,0,dw,dh);
+    if(a===90||a===-270){
+      displayCtx.translate(dw/2,dh/2); displayCtx.rotate(-Math.PI/2);
+      const s=Math.max(dw/vh,dh/vw);
+      displayCtx.drawImage(videoEl,-vh*s/2,-vw*s/2,vh*s,vw*s);
+    } else if(a===-90||a===270){
+      displayCtx.translate(dw/2,dh/2); displayCtx.rotate(Math.PI/2);
+      const s=Math.max(dw/vh,dh/vw);
+      displayCtx.drawImage(videoEl,-vh*s/2,-vw*s/2,vh*s,vw*s);
+    } else if(a===180){
+      displayCtx.translate(dw/2,dh/2); displayCtx.rotate(Math.PI);
+      const s=Math.max(dw/vw,dh/vh);
+      displayCtx.drawImage(videoEl,-vw*s/2,-vh*s/2,vw*s,vh*s);
+    } else {
+      const s=Math.max(dw/vw,dh/vh);
+      displayCtx.translate(dw/2,dh/2);
+      displayCtx.drawImage(videoEl,-vw*s/2,-vh*s/2,vw*s,vh*s);
+    }
+    displayCtx.restore();
+
+    /* Capture canvas — 224×224, always upright + horizontally mirrored.
+       IMPORTANT: The Teachable Machine model was trained on a desktop webcam
+       whose preview is mirrored (scaleX(-1)). To match training data exactly,
+       we must also mirror the capture frame before sending it to the PC model.
+       Without this, a side-mounted phone sends an un-mirrored side-angle image
+       the model has never seen → wrong predictions. */
+    capCtx.save();
+    capCtx.clearRect(0,0,224,224);
+    // Apply horizontal mirror first (to match training orientation)
+    capCtx.translate(224,0);
+    capCtx.scale(-1,1);
+    if(a===90||a===-270){
+      capCtx.translate(112,112); capCtx.rotate(-Math.PI/2);
+      capCtx.drawImage(videoEl,-112,-112,224,224);
+    } else if(a===-90||a===270){
+      capCtx.translate(112,112); capCtx.rotate(Math.PI/2);
+      capCtx.drawImage(videoEl,-112,-112,224,224);
+    } else if(a===180){
+      capCtx.translate(112,112); capCtx.rotate(Math.PI);
+      capCtx.drawImage(videoEl,-112,-112,224,224);
+    } else {
+      capCtx.drawImage(videoEl,0,0,224,224);
+    }
+    capCtx.restore();
+  }
+  draw();
+}
+
+/* ── STREAMING LOOP ──
+   2 FPS JPEG → PC via PeerJS DataChannel
+   Enough for model running every 500ms on PC.
+*/
+function startStream(){
+  const TARGET_FPS = 2;
+  streamLoop = setInterval(()=>{
+    if(!pcConn||!pcConn.open||!capCanvas) return;
+    if(!videoEl||videoEl.readyState<2) return;
+    capCanvas.toBlob(blob=>{
+      if(!blob||!pcConn||!pcConn.open) return;
+      try{
+        // Convert blob to ArrayBuffer and send as raw binary
+        blob.arrayBuffer().then(buf=>{
+          if(pcConn&&pcConn.open) pcConn.send(buf);
+        });
+        totalFrames++;
+        g('fps-lbl').textContent='Frames sent: '+totalFrames;
+        g('chip-fps').innerHTML='<i class="cd g"></i>'+TARGET_FPS+' FPS';
+        g('chip-fps').classList.add('lit');
+      } catch(e){}
+    }, 'image/jpeg', 0.72);
+  }, 1000/TARGET_FPS);
+}
+function stopStream(){
+  if(streamLoop){ clearInterval(streamLoop); streamLoop=null; }
+}
+
+/* ── LAUNCH ── */
+function launch(){
+  g('loading-screen').style.display = 'none';
+  g('cam-wrap').classList.add('show');
+  listenOrientation();
+  startCanvasLoop();
+  startStream();
+}
+
+/* ── BOOT ── */
+connectToPeer();
+
+/* Wake lock */
+async function keepAwake(){
+  if('wakeLock' in navigator){
+    try{ await navigator.wakeLock.request('screen'); }catch(e){}
+  }
+}
+keepAwake();
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') keepAwake(); });
+document.addEventListener('touchstart',()=>{},{passive:true});
+</script>
+</body>
+</html>
