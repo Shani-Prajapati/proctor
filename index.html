@@ -964,86 +964,32 @@ function handleCalibratedPrediction(preds){
   if(!S.running||!preds||preds.length===0) return;
 
   // Get raw probabilities
-  let rawFocused=0, rawDistracted=0, rawPhone=0;
   let rawLabel='', rawConf=0;
   preds.forEach(p=>{
-    const lbl=(p.className||'').trim().toLowerCase();
-    if(lbl==='focused')          rawFocused    =p.probability;
-    else if(lbl==='distracted')  rawDistracted =p.probability;
-    else if(lbl==='using phone') rawPhone      =p.probability;
-    if(p.probability>rawConf){ rawConf=p.probability; rawLabel=lbl; }
+    if(p.probability>rawConf){ rawConf=p.probability; rawLabel=(p.className||'').trim().toLowerCase(); }
   });
 
   const confNum=parseFloat((rawConf*100).toFixed(1));
 
-  // Update confidence display
-  g('conf-overlay').textContent=(rawLabel||'?')+' · '+confNum.toFixed(1)+'%';
+  // Update display
+  g('conf-overlay').textContent=rawLabel+' · '+confNum.toFixed(1)+'%';
   setChip('chip-conf',confNum>75?'g':confNum>50?'a':'r','Conf: '+confNum.toFixed(1)+'%');
   S.checks++; g('s-checks').textContent=S.checks;
 
-  // ── CALIBRATED DELTA LOGIC ──
-  let effectiveLabel;
+  // ── TRUST RAW MODEL DIRECTLY — no delta/calibration ──
+  // Calibration was inverting results (baseline 1% = broken)
+  // Model was retrained at exact phone angle, so trust it directly
+  const effectiveLabel = rawLabel;
 
-  if(calBaseline){
-    const baseFocused    = calBaseline['focused']    || 0;
-    const baseDistracted = calBaseline['distracted'] || 0;
-    const basePhone      = calBaseline['using phone']|| 0;
-
-    // Delta: how much each class changed from baseline
-    const deltaFocused    = rawFocused    - baseFocused;
-    const deltaDistracted = rawDistracted - baseDistracted;
-    const deltaPhone      = rawPhone      - basePhone;
-
-    /* Decision rules — calibration-relative:
-       The phone is placed at the side, so the model may already report
-       lower "focused" scores at baseline (e.g. 55%) compared to a
-       front-facing webcam (90%+). We use DELTA from baseline, not
-       absolute thresholds, so the detection is angle-agnostic.
-       
-       Tightened thresholds to reduce false positives from side angle:
-       • focusedDropped: focused fell >25% below baseline (was 20%)
-       • distractedRose: distracted rose >20% above baseline (was 15%)
-       • phoneRose:      phone rose >25% above baseline (was 20%)
-       • phoneAbsolute:  raw phone > 60% AND is dominant class (was 55%)
-    */
-    const focusedDropped    = deltaFocused    < -0.25;
-    const distractedRose    = deltaDistracted >  0.20;
-    const phoneRose         = deltaPhone      >  0.25;
-    const phoneAbsolute     = rawPhone        >  0.60 && rawPhone > rawDistracted;
-
-    if(!focusedDropped){
-      effectiveLabel = 'focused';
-    } else if((phoneRose || phoneAbsolute) && rawPhone > rawDistracted){
-      effectiveLabel = 'using phone';
-    } else if(distractedRose){
-      effectiveLabel = 'distracted';
-    } else {
-      // focused dropped but nothing else rose clearly — natural side-angle sway, treat as focused
-      effectiveLabel = 'focused';
-    }
-
-  } else {
-    // No calibration fallback — side-angle phones never hit 90% on phone class
-    // so use simpler majority rule with lower phone threshold
-    if(rawFocused >= rawDistracted && rawFocused >= rawPhone){
-      effectiveLabel='focused';
-    } else if(rawPhone >= rawDistracted && rawPhone > 0.55){
-      effectiveLabel='using phone';
-    } else {
-      effectiveLabel='distracted';
-    }
-  }
-
-  // ── TEMPORAL SMOOTHING (4 frames for phone cam — extra stability) ──
-  const FRAMES = PHONE_SMOOTHING_FRAMES;
+  // ── TEMPORAL SMOOTHING ──
   if(confNum >= CONFIDENCE_THRESHOLD){
     labelBuffer.push(effectiveLabel);
   } else {
     labelBuffer.push('uncertain');
   }
-  if(labelBuffer.length > FRAMES) labelBuffer.shift();
+  if(labelBuffer.length > PHONE_SMOOTHING_FRAMES) labelBuffer.shift();
 
-  const allSame    = labelBuffer.length===FRAMES && labelBuffer.every(l=>l===labelBuffer[0]);
+  const allSame    = labelBuffer.length===PHONE_SMOOTHING_FRAMES && labelBuffer.every(l=>l===labelBuffer[0]);
   const stableLabel= allSame ? labelBuffer[0] : null;
 
   if(confNum < CONFIDENCE_THRESHOLD){
@@ -1052,9 +998,8 @@ function handleCalibratedPrediction(preds){
     return;
   }
 
-  // Display-only while building consensus
   if(!stableLabel){
-    if(effectiveLabel==='focused')       onFocusedDisplay();
+    if(effectiveLabel==='focused')        onFocusedDisplay();
     else if(effectiveLabel==='distracted') onDistractedDisplay();
     else if(effectiveLabel==='using phone') onPhoneDisplay();
     return;
