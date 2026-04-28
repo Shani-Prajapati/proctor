@@ -15,6 +15,9 @@ if (!firebase.apps.length) {
 }
 var db = firebase.firestore();
 
+// Enable offline persistence + low-latency network for fastest writes
+try { db.settings({ ignoreUndefinedProperties: true, experimentalForceLongPolling: false }); } catch(e){}
+
 async function hashPassword(p) {
   var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(p));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -68,9 +71,13 @@ async function fb_studentLogin(name, id, subject, code, email, password) {
   return { role:'student', name:name, id:id, subject:subject, email:email, roomCode:code.toUpperCase(), examId:examId, loginTime:new Date().toISOString() };
 }
 
-async function fb_logViolation(examId, num, timeStr, msg, integrity) {
-  await db.collection('sessions').doc(examId).collection('violations').add({ num:num, time:timeStr, msg:msg, integrity:integrity });
-  await db.collection('sessions').doc(examId).update({ violations:num, integrity:integrity, status:num>=5?'critical':'warning', last_update:new Date().toISOString() });
+// Fire-and-forget violation log — does NOT await UI
+function fb_logViolation(examId, num, timeStr, msg, integrity) {
+  var sessRef = db.collection('sessions').doc(examId);
+  // Two parallel writes — neither blocks the UI
+  var p1 = sessRef.collection('violations').add({ num:num, time:timeStr, msg:msg, integrity:integrity, ts: Date.now() });
+  var p2 = sessRef.update({ violations:num, integrity:integrity, last_violation:msg, status:num>=5?'critical':'warning', last_update:new Date().toISOString() });
+  return Promise.all([p1,p2]);
 }
 
 function fb_listenToRoom(roomCode, callback) {
@@ -81,4 +88,18 @@ function fb_listenToRoom(roomCode, callback) {
 
 async function fb_endSession(examId) {
   await db.collection('sessions').doc(examId).update({ status:'ended', last_update:new Date().toISOString() });
+}
+
+// Fetch full report data for a single student session — used by faculty's Download Report button
+async function fb_getSessionReport(examId) {
+  var sessRef = db.collection('sessions').doc(examId);
+  var results = await Promise.all([
+    sessRef.get(),
+    sessRef.collection('violations').orderBy('ts','asc').get()
+  ]);
+  var sessSnap = results[0], vSnap = results[1];
+  return {
+    session: sessSnap.exists ? sessSnap.data() : null,
+    violations: vSnap.docs.map(function(d){ return d.data(); })
+  };
 }

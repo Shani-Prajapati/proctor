@@ -1,227 +1,232 @@
 <!DOCTYPE html>
-<!-- AI Exam Proctor v3.1 - cache bust 21042026 -->
+<!-- AI Exam Proctor v4.0 — Light Theme + Strict Quiz Mode + Low Latency -->
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>AI Exam Proctor — Exam Session</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
-:root{--bg:#0b0b0b;--P:#F2EFE7;--P55:rgba(242,239,231,.55);--P30:rgba(242,239,231,.30);--P12:rgba(242,239,231,.12);--P07:rgba(242,239,231,.07);--P04:rgba(242,239,231,.04);--Pglow:rgba(242,239,231,.22);--M:#8B004A;--M50:rgba(139,0,74,.50);--M25:rgba(139,0,74,.25);--M10:rgba(139,0,74,.10);--Mglow:rgba(139,0,74,.30);--green:#22c55e;--green15:rgba(34,197,94,.15);--red:#ef4444;--amber:#f59e0b;--glass:rgba(255,255,255,.028);--gborder:rgba(242,239,231,.07);--r:14px;--rs:8px;--ease:.28s cubic-bezier(.4,0,.2,1);}
+:root{
+  --bg:#f8f7f5; --bg2:#f0eeeb; --bg3:#e8e5e0; --surface:#ffffff;
+  --text:#1a1a1a; --text2:#4a4a4a; --text3:#888; --muted:#bbb;
+  --M:#8B004A; --M10:rgba(139,0,74,.08); --M20:rgba(139,0,74,.18); --M50:rgba(139,0,74,.5);
+  --green:#16a34a; --green10:rgba(22,163,74,.08); --green20:rgba(22,163,74,.2);
+  --red:#dc2626; --red10:rgba(220,38,38,.08); --red20:rgba(220,38,38,.2);
+  --amber:#d97706; --amber10:rgba(217,119,6,.08);
+  --blue:#1e40af; --blue10:#dbeafe;
+  --border:#e2ddd8;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);
+  --r:12px; --rs:8px;
+  --ease:.22s cubic-bezier(.4,0,.2,1);
+}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-body{background:var(--bg);color:var(--P);font-family:'DM Sans',sans-serif;font-size:14px;overflow-x:hidden;min-height:100vh;}
-body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(var(--P07) 1px,transparent 1px),linear-gradient(90deg,var(--P07) 1px,transparent 1px);background-size:42px 42px;opacity:.35;}
-body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 70% 45% at 50% 0%,rgba(139,0,74,.09) 0%,transparent 65%);}
-.glass{background:var(--glass);backdrop-filter:blur(22px) saturate(145%);-webkit-backdrop-filter:blur(22px) saturate(145%);border:1px solid var(--gborder);border-radius:var(--r);}
-.hdr{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:10px 20px;border-bottom:1px solid var(--gborder);background:linear-gradient(180deg,rgba(242,239,231,.04) 0%,transparent 100%);}
-.hdr-l{display:flex;align-items:center;gap:10px}
-.hdr-r{display:flex;align-items:center;gap:8px}
-.emblem{width:34px;height:34px;border-radius:50%;flex-shrink:0;border:1px solid var(--P30);display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 0 14px var(--Pglow);}
-.emblem::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:1px solid transparent;border-top-color:var(--P55);animation:spin 7s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg)}}
-.site-title{font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em;color:var(--P);}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;overflow-x:hidden;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(139,0,74,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(139,0,74,.04) 1px,transparent 1px);background-size:42px 42px;}
+body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 70% 45% at 50% 0%,rgba(139,0,74,.05) 0%,transparent 65%);}
+
+/* Header */
+.hdr{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 22px;height:58px;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 1px 6px rgba(0,0,0,.04);}
+.hdr-l{display:flex;align-items:center;gap:12px}
+.hdr-r{display:flex;align-items:center;gap:10px}
+.emblem{width:34px;height:34px;border-radius:50%;background:var(--M);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px var(--M10);}
+.site-title{font-family:'Orbitron',sans-serif;font-size:.88rem;font-weight:700;letter-spacing:.06em;color:var(--text);}
 .site-title span{color:var(--M);}
-.hbadge{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:20px;border:1px solid var(--gborder);background:var(--glass);font-family:'Orbitron',sans-serif;font-size:.52rem;letter-spacing:.14em;color:var(--P55);}
-.hbadge.live{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.06);color:var(--green)}
+.hbadge{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:#fff;font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:.12em;color:var(--text3);font-weight:600;}
+.hbadge.live{border-color:var(--green20);background:var(--green10);color:var(--green);}
 .ldot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:blink 1.4s ease-in-out infinite;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-.hclock{font-family:'Orbitron',sans-serif;font-size:.65rem;letter-spacing:.1em;color:var(--P30);}
-.student-badge{font-family:'Orbitron',sans-serif;font-size:.52rem;letter-spacing:.1em;padding:3px 9px;border-radius:20px;border:1px solid var(--M25);background:var(--M10);color:var(--M);}
-.btn-logout{padding:5px 10px;border:1px solid var(--gborder);border-radius:6px;background:transparent;color:rgba(242,239,231,.38);font-size:.62rem;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
-.btn-logout:hover{border-color:var(--M25);color:var(--red);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.hclock{font-family:'Orbitron',sans-serif;font-size:.7rem;letter-spacing:.1em;color:var(--text3);}
+.student-badge{font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:.1em;padding:4px 12px;border-radius:20px;border:1px solid var(--M20);background:var(--M10);color:var(--M);font-weight:700;}
+.btn-logout{padding:6px 12px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--text2);font-size:.68rem;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;}
+.btn-logout:hover{border-color:var(--red);color:var(--red);}
 
-/* FULLSCREEN CAMERA MODE */
-.dash{position:relative;z-index:5;display:grid;grid-template-columns:220px 1fr 220px;gap:10px;padding:10px 14px 16px;height:calc(100vh - 56px);}
-.panel{padding:14px;display:flex;flex-direction:column;transition:box-shadow var(--ease);overflow-y:auto;}
-.plbl{font-family:'Orbitron',sans-serif;font-size:.5rem;letter-spacing:.22em;color:var(--M);padding-bottom:7px;border-bottom:1px solid var(--M25);margin-bottom:12px;flex-shrink:0;}
-.divider{height:1px;background:var(--gborder);margin:8px 0;flex-shrink:0;}
+/* Dashboard layout */
+.dash{position:relative;z-index:5;display:grid;grid-template-columns:240px 1fr 240px;gap:14px;padding:14px;height:calc(100vh - 58px);}
+.panel{padding:16px;display:flex;flex-direction:column;background:#fff;border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow-y:auto;}
+.plbl{font-family:'Orbitron',sans-serif;font-size:.55rem;letter-spacing:.22em;color:var(--M);padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:14px;flex-shrink:0;font-weight:700;}
+.divider{height:1px;background:var(--border);margin:10px 0;flex-shrink:0;}
 .grow{flex:1}
-.iblk{margin-bottom:3px}
-.ilbl{font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(242,239,231,.36);margin-bottom:5px;}
-.spill{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border-radius:20px;font-size:.65rem;font-weight:500;border:1px solid var(--P12);background:var(--P04);color:var(--P);}
-.sdot2{width:6px;height:6px;border-radius:50%;background:var(--P);box-shadow:0 0 5px var(--Pglow);animation:blink 1.8s ease-in-out infinite;}
-.alert-row{display:flex;align-items:baseline;gap:8px}
-.alert-num{font-family:'Orbitron',sans-serif;font-size:2.4rem;font-weight:900;line-height:1;color:var(--P);transition:color .35s,text-shadow .35s;}
-.alert-num.flagged{color:var(--red);text-shadow:0 0 18px rgba(239,68,68,.6)}
-.alert-lbl{font-size:.55rem;line-height:1.6;letter-spacing:.07em;color:rgba(242,239,231,.35);text-transform:uppercase;}
-.srow{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.022);}
-.sk{font-size:.6rem;color:rgba(242,239,231,.35);letter-spacing:.04em}
-.sv{font-family:'Orbitron',sans-serif;font-size:.58rem;color:var(--P);letter-spacing:.06em;}
-.ibar-row{display:flex;align-items:center;gap:8px}
-.ibar{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.05);overflow:hidden;}
-.ibar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--P),var(--P55));box-shadow:0 0 8px var(--Pglow);transition:width 1s ease,background .5s;}
-.ibar-pct{font-family:'Orbitron',sans-serif;font-size:.6rem;color:var(--P);}
-.btn-start{position:relative;overflow:hidden;width:100%;padding:11px;border:1px solid var(--P30);border-radius:var(--rs);background:linear-gradient(135deg,rgba(242,239,231,.1),rgba(242,239,231,.04));color:var(--P);font-family:'Orbitron',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:.15em;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--ease);}
-.btn-start:hover{border-color:var(--P55);box-shadow:0 0 26px rgba(242,239,231,.16);transform:translateY(-1px);}
-.btn-start .shine{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(242,239,231,.1) 0%,transparent 65%);animation:gp 2.5s ease-in-out infinite;}
-@keyframes gp{0%,100%{opacity:.4}50%{opacity:1}}
-.btn-reset{width:100%;padding:8px;border:1px solid var(--gborder);border-radius:var(--rs);background:transparent;color:rgba(242,239,231,.35);font-family:'DM Sans',sans-serif;font-size:.68rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--ease);margin-top:6px;}
-.btn-reset:hover{border-color:var(--M25);background:var(--M10);color:var(--P);}
-.btn-report{width:100%;padding:8px;margin-top:6px;border:1px solid rgba(239,68,68,.35);border-radius:var(--rs);background:linear-gradient(135deg,rgba(239,68,68,.1),rgba(139,0,74,.07));color:#ef4444;font-family:'Orbitron',sans-serif;font-size:.57rem;font-weight:700;letter-spacing:.1em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all var(--ease);}
-.btn-report:hover{border-color:rgba(239,68,68,.65);box-shadow:0 0 14px rgba(239,68,68,.2);transform:translateY(-1px);}
-.btn-report:disabled{opacity:.28;cursor:not-allowed;transform:none;}
+.iblk{margin-bottom:4px}
+.ilbl{font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;font-weight:600;}
+.spill{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:20px;font-size:.7rem;font-weight:600;border:1px solid var(--green20);background:var(--green10);color:var(--green);}
+.sdot2{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:blink 1.6s ease-in-out infinite;}
+.alert-row{display:flex;align-items:baseline;gap:10px}
+.alert-num{font-family:'Orbitron',sans-serif;font-size:2.4rem;font-weight:900;line-height:1;color:var(--text);transition:color .35s;}
+.alert-num.flagged{color:var(--red);}
+.alert-lbl{font-size:.58rem;line-height:1.6;letter-spacing:.07em;color:var(--text3);text-transform:uppercase;font-weight:600;}
+.srow{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);}
+.srow:last-child{border-bottom:none;}
+.sk{font-size:.62rem;color:var(--text3);letter-spacing:.04em;font-weight:500;}
+.sv{font-family:'Orbitron',sans-serif;font-size:.62rem;color:var(--text);letter-spacing:.04em;font-weight:600;}
+.ibar-row{display:flex;align-items:center;gap:9px}
+.ibar{flex:1;height:5px;border-radius:3px;background:var(--bg2);overflow:hidden;}
+.ibar-fill{height:100%;border-radius:3px;background:var(--green);transition:width .8s ease,background .4s;}
+.ibar-pct{font-family:'Orbitron',sans-serif;font-size:.66rem;color:var(--text);font-weight:700;}
 
-/* CENTER — fullscreen camera */
-.center-panel{gap:8px;padding:10px 0;}
-.wcam-box{
-  position:relative;
-  width:100%;
-  /* Take up ALL remaining height — true fullscreen like Google Meet */
-  flex:1;
-  min-height:0;
-  border-radius:14px;overflow:hidden;
-  border:2px solid var(--M25);
-  background:#030303;
-  box-shadow:0 0 0 1px var(--M25),0 0 40px rgba(139,0,74,.1);
-  transition:border-color var(--ease),box-shadow var(--ease);
-}
-.wcam-box.active{border-color:var(--P30);box-shadow:0 0 0 1px var(--M50),0 0 50px rgba(242,239,231,.08);}
-.wcam-box.alert-state{border-color:rgba(239,68,68,.7)!important;box-shadow:0 0 0 3px rgba(239,68,68,.35),0 0 60px rgba(239,68,68,.2)!important;}
-.cam-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:rgba(242,239,231,.25);font-size:.74rem;letter-spacing:.06em;}
-.cam-ph span{font-size:.6rem;opacity:.5}
-#wcam-video{
-  position:absolute;inset:0;
-  width:100%;height:100%;
-  /* object-fit:cover fills the entire box — true fullscreen */
-  object-fit:cover;
-  border-radius:14px;
-  display:none;
-}
-.cb{position:absolute;width:20px;height:20px;border-color:var(--P);border-style:solid;opacity:.4;z-index:2;}
+/* Buttons */
+.btn-start{position:relative;overflow:hidden;width:100%;padding:12px;border:none;border-radius:var(--rs);background:var(--M);color:#fff;font-family:'Orbitron',sans-serif;font-size:.66rem;font-weight:700;letter-spacing:.14em;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--ease);box-shadow:0 4px 14px rgba(139,0,74,.22);}
+.btn-start:hover{box-shadow:0 6px 22px rgba(139,0,74,.32);transform:translateY(-1px);}
+.btn-reset{width:100%;padding:9px;border:1px solid var(--border);border-radius:var(--rs);background:#fff;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:.72rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--ease);margin-top:7px;}
+.btn-reset:hover{border-color:var(--M);color:var(--M);}
+.btn-report{width:100%;padding:9px;margin-top:7px;border:1px solid var(--red20);border-radius:var(--rs);background:var(--red10);color:var(--red);font-family:'Orbitron',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:.1em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all var(--ease);}
+.btn-report:hover{background:var(--red);color:#fff;border-color:var(--red);}
+.btn-report:disabled{opacity:.4;cursor:not-allowed;background:var(--bg2);color:var(--text3);border-color:var(--border);}
+.btn-get-cam{width:100%;padding:10px;margin-top:7px;border:1px solid var(--M20);border-radius:var(--rs);background:var(--M10);color:var(--M);font-family:'Orbitron',sans-serif;font-size:.58rem;font-weight:700;letter-spacing:.1em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all var(--ease);}
+.btn-get-cam:hover{background:var(--M);color:#fff;border-color:var(--M);}
+.btn-get-cam.cam-linked{border-color:var(--green20);color:var(--green);background:var(--green10);}
+.btn-quiz-mode{width:100%;padding:10px;margin-top:7px;border:1px solid var(--green20);border-radius:var(--rs);background:var(--green10);color:var(--green);font-family:'Orbitron',sans-serif;font-size:.58rem;font-weight:700;letter-spacing:.1em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all var(--ease);}
+.btn-quiz-mode:hover{background:var(--green);color:#fff;border-color:var(--green);}
+.btn-quiz-mode:disabled{opacity:.4;cursor:not-allowed;background:var(--bg2);color:var(--text3);border-color:var(--border);}
+
+/* Center camera panel */
+.center-panel{gap:8px;padding:14px;}
+.wcam-box{position:relative;width:100%;flex:1;min-height:0;border-radius:14px;overflow:hidden;border:2px solid var(--M20);background:#0a0a0a;box-shadow:0 0 0 1px var(--border),0 8px 28px rgba(0,0,0,.08);transition:border-color var(--ease),box-shadow var(--ease);}
+.wcam-box.active{border-color:var(--green);box-shadow:0 0 0 1px var(--green20),0 8px 28px rgba(22,163,74,.12);}
+.wcam-box.alert-state{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(220,38,38,.2),0 8px 28px rgba(220,38,38,.18)!important;}
+.cam-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:rgba(255,255,255,.45);font-size:.78rem;letter-spacing:.06em;}
+.cam-ph span{font-size:.62rem;opacity:.7}
+#wcam-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:14px;display:none;}
+.cb{position:absolute;width:20px;height:20px;border-color:#fff;border-style:solid;opacity:.55;z-index:2;}
 .cb.tl{top:10px;left:10px;border-width:2px 0 0 2px;border-radius:3px 0 0 0}
 .cb.tr{top:10px;right:10px;border-width:2px 2px 0 0;border-radius:0 3px 0 0}
 .cb.bl{bottom:10px;left:10px;border-width:0 0 2px 2px;border-radius:0 0 0 3px}
 .cb.br{bottom:10px;right:10px;border-width:0 2px 2px 0;border-radius:0 0 3px 0}
-.scanline{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--P),transparent);box-shadow:0 0 8px var(--Pglow);opacity:0;z-index:3;animation:scan 4s linear infinite;}
-@keyframes scan{0%{top:0;opacity:0}4%{opacity:.45}96%{opacity:.45}100%{top:100%;opacity:0}}
-.face-rect{position:absolute;top:12px;left:12px;right:12px;bottom:12px;border:2px solid var(--M);border-radius:8px;box-shadow:0 0 20px var(--Mglow);opacity:0;z-index:4;transition:opacity .4s,border-color .3s,box-shadow .3s;}
+.scanline{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#fff,transparent);box-shadow:0 0 8px rgba(255,255,255,.5);opacity:0;z-index:3;animation:scan 4s linear infinite;}
+@keyframes scan{0%{top:0;opacity:0}4%{opacity:.5}96%{opacity:.5}100%{top:100%;opacity:0}}
+.face-rect{position:absolute;top:12px;left:12px;right:12px;bottom:12px;border:2px solid var(--M);border-radius:8px;box-shadow:0 0 18px rgba(139,0,74,.5);opacity:0;z-index:4;transition:opacity .3s,border-color .25s,box-shadow .25s;}
 .face-rect.show{opacity:1}
-.face-rect.danger{border-color:var(--red)!important;box-shadow:0 0 28px rgba(239,68,68,.55)!important;animation:pulser .5s ease-in-out infinite alternate;}
-@keyframes pulser{from{opacity:.65}to{opacity:1}}
-.face-label{position:absolute;top:18px;left:50%;transform:translateX(-50%);font-family:'Orbitron',sans-serif;font-size:.62rem;letter-spacing:.12em;padding:4px 14px;border-radius:20px;background:rgba(0,0,0,.6);border:1px solid var(--M50);color:var(--M);z-index:5;opacity:0;transition:opacity .4s;white-space:nowrap;}
+.face-rect.danger{border-color:var(--red)!important;box-shadow:0 0 22px rgba(220,38,38,.6)!important;animation:pulser .5s ease-in-out infinite alternate;}
+@keyframes pulser{from{opacity:.7}to{opacity:1}}
+.face-label{position:absolute;top:18px;left:50%;transform:translateX(-50%);font-family:'Orbitron',sans-serif;font-size:.64rem;letter-spacing:.12em;padding:5px 14px;border-radius:20px;background:rgba(255,255,255,.95);border:1px solid var(--border);color:var(--M);z-index:5;opacity:0;transition:opacity .3s;white-space:nowrap;font-weight:700;}
 .face-label.show{opacity:1}
-.conf-overlay{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-family:'Orbitron',sans-serif;font-size:.56rem;letter-spacing:.1em;padding:4px 12px;border-radius:20px;background:rgba(0,0,0,.6);border:1px solid rgba(242,239,231,.1);color:rgba(242,239,231,.5);z-index:5;opacity:0;transition:opacity .4s;white-space:nowrap;}
+.conf-overlay{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:.1em;padding:5px 12px;border-radius:20px;background:rgba(255,255,255,.92);border:1px solid var(--border);color:var(--text2);z-index:5;opacity:0;transition:opacity .3s;white-space:nowrap;font-weight:600;}
 .conf-overlay.show{opacity:1}
 
-/* Bottom row under camera */
+/* Bottom row chips */
 .cam-bottom{display:flex;gap:7px;flex-wrap:wrap;flex-shrink:0;}
-.chip{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:20px;border:1px solid var(--gborder);background:var(--glass);font-size:.58rem;letter-spacing:.04em;color:rgba(242,239,231,.42);transition:color var(--ease),border-color var(--ease);}
-.chip.lit{color:var(--P);border-color:var(--P12)}
+.chip{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;border:1px solid var(--border);background:#fff;font-size:.62rem;letter-spacing:.04em;color:var(--text3);transition:color var(--ease),border-color var(--ease);font-weight:500;}
+.chip.lit{color:var(--text);border-color:var(--M20);}
 .cd{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.cd.g{background:var(--green);box-shadow:0 0 5px var(--green)}
-.cd.a{background:var(--amber);box-shadow:0 0 5px var(--amber)}
-.cd.r{background:var(--red);box-shadow:0 0 5px var(--red)}
-.result-card{display:flex;align-items:center;gap:11px;padding:10px 14px;border-radius:var(--rs);border:1px solid var(--gborder);background:var(--glass);transition:all .4s;flex-shrink:0;}
-.result-card.focused{border-color:rgba(34,197,94,.35);background:var(--green15);box-shadow:0 0 20px rgba(34,197,94,.1);}
-.result-card.cheating{border-color:var(--M50);background:var(--M10);box-shadow:0 0 26px var(--Mglow);animation:shake .4s ease;}
-.result-card.phone{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.07);animation:shake .4s ease;}
+.cd.g{background:var(--green);} .cd.a{background:var(--amber);} .cd.r{background:var(--red);}
+
+/* Result card */
+.result-card{display:flex;align-items:center;gap:12px;padding:11px 15px;border-radius:var(--rs);border:1px solid var(--border);background:#fff;transition:all .35s;flex-shrink:0;}
+.result-card.focused{border-color:var(--green20);background:var(--green10);}
+.result-card.cheating{border-color:var(--red20);background:var(--red10);animation:shake .35s ease;}
+.result-card.phone{border-color:rgba(217,119,6,.3);background:var(--amber10);animation:shake .35s ease;}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}60%{transform:translateX(5px)}80%{transform:translateX(-2px)}}
-.res-ico{font-size:1.3rem;line-height:1;flex-shrink:0}
-.res-title{font-family:'Orbitron',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:.05em;color:var(--P);}
-.result-card.focused .res-title{color:var(--green)}
-.result-card.cheating .res-title{color:#e87070}
-.result-card.phone .res-title{color:var(--amber)}
-.res-sub{font-size:.58rem;color:rgba(242,239,231,.36);margin-top:2px;}
-.log-list{display:flex;flex-direction:column;gap:2px;max-height:100px;overflow-y:auto;flex-shrink:0;}
+.res-ico{font-size:1.4rem;line-height:1;flex-shrink:0;}
+.res-title{font-family:'Orbitron',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:.04em;color:var(--text);}
+.result-card.focused .res-title{color:var(--green);}
+.result-card.cheating .res-title{color:var(--red);}
+.result-card.phone .res-title{color:var(--amber);}
+.res-sub{font-size:.62rem;color:var(--text3);margin-top:2px;}
+
+/* Activity log */
+.log-list{display:flex;flex-direction:column;gap:1px;max-height:120px;overflow-y:auto;flex-shrink:0;background:var(--bg2);border-radius:6px;padding:6px 8px;}
 .log-list::-webkit-scrollbar{width:2px}
-.log-list::-webkit-scrollbar-thumb{background:var(--M25);border-radius:2px}
-.log-item{display:flex;align-items:center;gap:6px;font-size:.58rem;color:rgba(242,239,231,.35);padding:3px 0;border-bottom:1px solid rgba(255,255,255,.018);animation:fup .2s ease;}
+.log-list::-webkit-scrollbar-thumb{background:var(--M20);border-radius:2px}
+.log-item{display:flex;align-items:center;gap:7px;font-size:.62rem;color:var(--text2);padding:4px 0;border-bottom:1px solid rgba(0,0,0,.04);animation:fup .2s ease;}
+.log-item:last-child{border-bottom:none;}
 @keyframes fup{from{opacity:0;transform:translateY(-2px)}to{opacity:1;transform:none}}
-.lt{font-family:'Orbitron',sans-serif;font-size:.5rem;color:var(--M);min-width:30px;letter-spacing:.06em;}
-.ld{width:5px;height:5px;border-radius:50%;flex-shrink:0;background:#2a2a2a}
-.ld.ok{background:var(--green);box-shadow:0 0 4px var(--green)}
-.ld.warn{background:var(--M);box-shadow:0 0 4px var(--M)}
-.lm{flex:1}
-.mod-card{padding:9px 11px;border-radius:var(--rs);border:1px solid var(--gborder);background:rgba(255,255,255,.012);margin-bottom:7px;flex-shrink:0;}
-.mod-head{display:flex;align-items:center;gap:7px;margin-bottom:4px}
-.mod-ico{width:24px;height:24px;border-radius:5px;background:var(--P04);border:1px solid var(--P12);display:flex;align-items:center;justify-content:center;color:var(--P);flex-shrink:0;}
-.mod-name{flex:1;font-size:.65rem;font-weight:500;color:var(--P);letter-spacing:.02em}
-.mod-stat{font-size:.54rem;letter-spacing:.07em;color:rgba(242,239,231,.28);margin-bottom:5px;}
-.mod-stat.on{color:var(--green)}
-.tog{width:28px;height:15px;border-radius:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);position:relative;cursor:pointer;flex-shrink:0;transition:background var(--ease),box-shadow var(--ease);}
-.tog.on{background:var(--M);border-color:var(--M50);box-shadow:0 0 7px var(--Mglow);}
-.tog span{position:absolute;top:2px;left:2px;width:9px;height:9px;border-radius:50%;background:rgba(242,239,231,.5);transition:transform var(--ease),background var(--ease);}
-.tog.on span{transform:translateX(13px);background:var(--P);}
-.mod-bar{height:2px;border-radius:1px;background:rgba(255,255,255,.05);overflow:hidden;}
-.mod-bar div{height:100%;border-radius:1px;background:linear-gradient(90deg,var(--M),rgba(139,0,74,.4));transition:width 1.2s ease;}
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:5px;flex-shrink:0;}
-.stat-box{padding:7px 9px;border-radius:var(--rs);border:1px solid var(--gborder);background:rgba(255,255,255,.01);text-align:center;}
-.stat-n{font-family:'Orbitron',sans-serif;font-size:.95rem;font-weight:700;color:var(--P);margin-bottom:1px;}
-.stat-l{font-size:.52rem;letter-spacing:.1em;color:rgba(242,239,231,.28);text-transform:uppercase;}
-.model-status{font-family:'Orbitron',sans-serif;font-size:.5rem;letter-spacing:.1em;padding:4px 8px;border-radius:5px;text-align:center;margin-bottom:6px;border:1px solid var(--gborder);color:rgba(242,239,231,.35);background:rgba(0,0,0,.2);transition:all .4s;flex-shrink:0;}
-.model-status.loaded{color:var(--green);border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.05);}
-.model-status.error{color:var(--red);border-color:rgba(239,68,68,.3);}
-.beep-banner{display:none;position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(239,68,68,.96);border:1px solid var(--red);border-radius:10px;padding:10px 22px;font-family:'Orbitron',sans-serif;font-size:.68rem;letter-spacing:.1em;color:#fff;box-shadow:0 0 32px rgba(239,68,68,.6);animation:fadeinb .3s ease;text-align:center;}
+.lt{font-family:'Orbitron',sans-serif;font-size:.54rem;color:var(--M);min-width:32px;letter-spacing:.04em;font-weight:700;}
+.ld{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:var(--text3);}
+.ld.ok{background:var(--green);} .ld.warn{background:var(--red);}
+.lm{flex:1;font-weight:500;}
+
+/* Detection module cards */
+.mod-card{padding:10px 12px;border-radius:var(--rs);border:1px solid var(--border);background:var(--bg);margin-bottom:8px;flex-shrink:0;}
+.mod-head{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.mod-ico{width:26px;height:26px;border-radius:6px;background:var(--M10);border:1px solid var(--M20);display:flex;align-items:center;justify-content:center;color:var(--M);flex-shrink:0;}
+.mod-name{flex:1;font-size:.7rem;font-weight:600;color:var(--text);letter-spacing:.02em;}
+.mod-stat{font-size:.58rem;letter-spacing:.06em;color:var(--text3);margin-bottom:6px;font-weight:500;}
+.mod-stat.on{color:var(--green);}
+.tog{width:30px;height:16px;border-radius:9px;background:var(--bg3);border:1px solid var(--border);position:relative;cursor:pointer;flex-shrink:0;transition:background var(--ease);}
+.tog.on{background:var(--M);border-color:var(--M);}
+.tog span{position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:#fff;transition:transform var(--ease);box-shadow:0 1px 2px rgba(0,0,0,.15);}
+.tog.on span{transform:translateX(14px);}
+.mod-bar{height:3px;border-radius:2px;background:var(--bg2);overflow:hidden;}
+.mod-bar div{height:100%;border-radius:2px;background:var(--M);transition:width 1s ease;}
+
+/* Stats grid */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:6px;flex-shrink:0;}
+.stat-box{padding:9px 10px;border-radius:var(--rs);border:1px solid var(--border);background:var(--bg);text-align:center;}
+.stat-n{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;color:var(--text);margin-bottom:2px;}
+.stat-l{font-size:.55rem;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;font-weight:600;}
+
+/* Model status */
+.model-status{font-family:'Orbitron',sans-serif;font-size:.55rem;letter-spacing:.08em;padding:6px 10px;border-radius:6px;text-align:center;margin-bottom:8px;border:1px solid var(--border);color:var(--text3);background:var(--bg2);transition:all .35s;flex-shrink:0;font-weight:600;}
+.model-status.loaded{color:var(--green);border-color:var(--green20);background:var(--green10);}
+.model-status.error{color:var(--red);border-color:var(--red20);background:var(--red10);}
+
+/* Beep banner */
+.beep-banner{display:none;position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:999;background:var(--red);color:#fff;border-radius:10px;padding:12px 24px;font-family:'Orbitron',sans-serif;font-size:.7rem;letter-spacing:.1em;font-weight:700;box-shadow:0 8px 28px rgba(220,38,38,.4);animation:fadeinb .25s ease;text-align:center;}
 @keyframes fadeinb{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-.pdf-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.78);align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+
+/* PDF overlay */
+.pdf-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);align-items:center;justify-content:center;flex-direction:column;gap:14px;}
 .pdf-overlay.show{display:flex}
-.pdf-spinner{width:38px;height:38px;border-radius:50%;border:3px solid rgba(242,239,231,.08);border-top-color:#ef4444;animation:spin .8s linear infinite;}
-.pdf-msg{font-family:'Orbitron',sans-serif;font-size:.62rem;letter-spacing:.14em;color:var(--P55);}
-/* Quiz Mode banner */
+.pdf-spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pdf-msg{font-family:'Orbitron',sans-serif;font-size:.7rem;letter-spacing:.14em;color:#fff;font-weight:600;}
+
+/* Quiz Mode bar — light professional */
 .quiz-mode-bar{
-  display:none;
-  position:fixed;bottom:0;left:0;right:0;z-index:200;
-  background:linear-gradient(90deg,#1a3a1a,#14532d);
-  border-top:2px solid #22c55e;
-  padding:8px 20px;
-  align-items:center;justify-content:space-between;gap:12px;
-  font-size:.68rem;
-  box-shadow:0 -4px 20px rgba(34,197,94,.2);
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:#fff;border-top:2px solid var(--green);padding:10px 22px;
+  align-items:center;justify-content:space-between;gap:14px;font-size:.7rem;
+  box-shadow:0 -4px 20px rgba(0,0,0,.08);
 }
 .quiz-mode-bar.show{display:flex;}
-.quiz-mode-bar-l{display:flex;align-items:center;gap:10px;color:#86efac;}
-.quiz-mode-bar-l svg{flex-shrink:0;}
-.quiz-mode-bar-title{font-family:'Orbitron',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:.12em;color:#4ade80;}
-.quiz-mode-bar-sub{font-size:.6rem;color:#86efac;opacity:.8;}
-.btn-exit-quiz{padding:6px 14px;border:1px solid #22c55e;border-radius:6px;background:rgba(34,197,94,.15);color:#4ade80;font-family:'Orbitron',sans-serif;font-size:.55rem;font-weight:700;letter-spacing:.1em;cursor:pointer;transition:all .2s;white-space:nowrap;}
-.btn-exit-quiz:hover{background:rgba(34,197,94,.3);}
-.btn-quiz-mode{width:100%;padding:8px;margin-top:6px;border:1px solid rgba(34,197,94,.35);border-radius:var(--rs);background:linear-gradient(135deg,rgba(34,197,94,.1),rgba(34,197,94,.05));color:var(--green);font-family:'Orbitron',sans-serif;font-size:.57rem;font-weight:700;letter-spacing:.1em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all var(--ease);}
-.btn-quiz-mode:hover{border-color:rgba(34,197,94,.65);box-shadow:0 0 14px rgba(34,197,94,.18);transform:translateY(-1px);}
-.btn-quiz-mode:disabled{opacity:.28;cursor:not-allowed;transform:none;}
+.quiz-mode-bar-l{display:flex;align-items:center;gap:12px;color:var(--text);}
+.quiz-mode-bar-l svg{flex-shrink:0;color:var(--green);}
+.quiz-mode-bar-title{font-family:'Orbitron',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.12em;color:var(--green);}
+.quiz-mode-bar-sub{font-size:.66rem;color:var(--text3);margin-top:1px;}
+.quiz-mode-bar-tabs{font-family:'Orbitron',sans-serif;font-size:.6rem;font-weight:700;color:var(--blue);background:var(--blue10);padding:4px 10px;border-radius:14px;letter-spacing:.06em;margin-left:auto;}
+.quiz-mode-bar-tabs.over{color:#fff;background:var(--red);animation:blink 1s infinite;}
+.btn-exit-quiz{padding:8px 16px;border:1px solid var(--green);border-radius:6px;background:#fff;color:var(--green);font-family:'Orbitron',sans-serif;font-size:.58rem;font-weight:700;letter-spacing:.1em;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn-exit-quiz:hover{background:var(--green);color:#fff;}
 
-/* ── Get Camera button ── */
-.btn-get-cam{width:100%;padding:9px;margin-top:6px;border:1px solid rgba(139,0,74,.5);border-radius:var(--rs);background:linear-gradient(135deg,rgba(139,0,74,.18),rgba(139,0,74,.06));color:#d4607a;font-family:'Orbitron',sans-serif;font-size:.54rem;font-weight:700;letter-spacing:.1em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all var(--ease);}
-.btn-get-cam:hover{border-color:rgba(139,0,74,.8);box-shadow:0 0 14px rgba(139,0,74,.22);transform:translateY(-1px);}
-.btn-get-cam.cam-linked{border-color:rgba(34,197,94,.45);color:#22c55e;background:rgba(34,197,94,.07);}
-
-/* ── QR overlay ── */
-.qr-ov{display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.86);align-items:center;justify-content:center;}
+/* QR popup */
+.qr-ov{display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);align-items:center;justify-content:center;}
 .qr-ov.show{display:flex;}
-.qr-modal{background:#0f0c10;border:1px solid rgba(139,0,74,.5);border-radius:18px;padding:26px 22px 20px;max-width:360px;width:92%;text-align:center;box-shadow:0 0 60px rgba(139,0,74,.22);animation:qrpop .3s ease;}
+.qr-modal{background:#fff;border:1px solid var(--border);border-radius:16px;padding:28px 24px 22px;max-width:380px;width:92%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:qrpop .25s ease;}
 @keyframes qrpop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
-.qr-ttl{font-family:'Orbitron',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.16em;color:#F2EFE7;margin-bottom:3px;}
-.qr-sub{font-size:.62rem;color:rgba(242,239,231,.38);margin-bottom:16px;line-height:1.6;}
-.qr-box{width:180px;height:180px;margin:0 auto 14px;border-radius:10px;overflow:hidden;background:#fff;padding:8px;display:flex;align-items:center;justify-content:center;}
-.qr-stat{font-size:.6rem;letter-spacing:.07em;min-height:20px;margin-bottom:12px;transition:color .3s;color:rgba(245,158,11,.85);font-family:'Orbitron',sans-serif;}
-.qr-stat.ok{color:#22c55e;}.qr-stat.err{color:#ef4444;}
-.qr-steps{text-align:left;margin-bottom:14px;padding:9px 11px;border-radius:8px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);}
-.qr-steps li{font-size:.6rem;color:rgba(242,239,231,.42);margin-bottom:5px;line-height:1.5;list-style:none;padding-left:14px;position:relative;}
-.qr-steps li::before{content:'→';position:absolute;left:0;color:rgba(139,0,74,.8);}
-.qr-note{font-size:.55rem;color:rgba(242,239,231,.2);margin-bottom:12px;padding:5px 8px;border-radius:6px;background:rgba(255,255,255,.015);}
-.btn-qr-close{width:100%;padding:9px;border:1px solid rgba(242,239,231,.1);border-radius:8px;background:transparent;color:rgba(242,239,231,.4);font-family:'DM Sans',sans-serif;font-size:.7rem;cursor:pointer;transition:all .2s;}
-.btn-qr-close:hover{border-color:rgba(139,0,74,.4);color:#F2EFE7;}
+.qr-ttl{font-family:'Orbitron',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:.14em;color:var(--text);margin-bottom:4px;}
+.qr-sub{font-size:.66rem;color:var(--text3);margin-bottom:18px;line-height:1.6;}
+.qr-box{width:184px;height:184px;margin:0 auto 14px;border-radius:10px;overflow:hidden;background:#fff;padding:8px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);}
+.qr-stat{font-size:.64rem;letter-spacing:.06em;min-height:22px;margin-bottom:14px;transition:color .25s;color:var(--amber);font-family:'Orbitron',sans-serif;font-weight:600;}
+.qr-stat.ok{color:var(--green);} .qr-stat.err{color:var(--red);}
+.qr-steps{text-align:left;margin-bottom:14px;padding:11px 13px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);}
+.qr-steps li{font-size:.64rem;color:var(--text2);margin-bottom:6px;line-height:1.5;list-style:none;padding-left:16px;position:relative;}
+.qr-steps li::before{content:'→';position:absolute;left:0;color:var(--M);font-weight:700;}
+.qr-note{font-size:.6rem;color:var(--text3);margin-bottom:14px;padding:8px 11px;border-radius:6px;background:var(--bg2);line-height:1.5;}
+.btn-qr-close{width:100%;padding:11px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:.74rem;cursor:pointer;transition:all .15s;font-weight:500;}
+.btn-qr-close:hover{border-color:var(--M);color:var(--M);}
 
-/* ── CALIBRATION OVERLAY ── */
-.cal-ov{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.9);align-items:center;justify-content:center;}
+/* Calibration overlay */
+.cal-ov{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;}
 .cal-ov.show{display:flex;}
-.cal-modal{background:#0f0c10;border:1px solid rgba(139,0,74,.5);border-radius:18px;padding:28px 24px;max-width:360px;width:92%;text-align:center;box-shadow:0 0 60px rgba(139,0,74,.3);}
-.cal-title{font-family:'Orbitron',sans-serif;font-size:.76rem;font-weight:700;letter-spacing:.16em;color:#F2EFE7;margin-bottom:6px;}
-.cal-sub{font-size:.65rem;color:rgba(242,239,231,.42);margin-bottom:20px;line-height:1.7;}
-.cal-preview{width:160px;height:120px;margin:0 auto 16px;border-radius:10px;overflow:hidden;border:2px solid rgba(139,0,74,.5);background:#000;position:relative;}
+.cal-modal{background:#fff;border:1px solid var(--border);border-radius:16px;padding:28px 26px;max-width:380px;width:92%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.cal-title{font-family:'Orbitron',sans-serif;font-size:.8rem;font-weight:700;letter-spacing:.14em;color:var(--text);margin-bottom:8px;}
+.cal-sub{font-size:.7rem;color:var(--text3);margin-bottom:20px;line-height:1.65;}
+.cal-sub b{color:var(--text);}
+.cal-preview{width:170px;height:128px;margin:0 auto 16px;border-radius:10px;overflow:hidden;border:2px solid var(--M20);background:#000;position:relative;}
 .cal-preview canvas{width:100%;height:100%;object-fit:cover;}
-.cal-bar-wrap{height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;margin-bottom:8px;}
-.cal-bar{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--M),var(--maroon-lt,#e0006e));width:0%;transition:width .15s;}
-.cal-count{font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:.12em;color:rgba(242,239,231,.4);margin-bottom:16px;}
-.btn-cal-start{width:100%;padding:12px;border:1px solid rgba(139,0,74,.6);border-radius:8px;background:linear-gradient(135deg,rgba(139,0,74,.25),rgba(139,0,74,.08));color:#F2EFE7;font-family:'Orbitron',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.14em;cursor:pointer;transition:all .25s;}
-.btn-cal-start:hover{box-shadow:0 0 20px rgba(139,0,74,.4);}
-.btn-cal-start:disabled{opacity:.35;cursor:not-allowed;}
-.cal-done{font-size:.65rem;color:#22c55e;margin-top:10px;display:none;}
+.cal-bar-wrap{height:8px;background:var(--bg2);border-radius:4px;overflow:hidden;margin-bottom:10px;}
+.cal-bar{height:100%;border-radius:4px;background:var(--M);width:0%;transition:width .15s,background .3s;}
+.cal-count{font-family:'Orbitron',sans-serif;font-size:.6rem;letter-spacing:.1em;color:var(--text3);margin-bottom:18px;font-weight:600;}
+.btn-cal-start{width:100%;padding:13px;border:none;border-radius:8px;background:var(--M);color:#fff;font-family:'Orbitron',sans-serif;font-size:.66rem;font-weight:700;letter-spacing:.12em;cursor:pointer;transition:all .15s;box-shadow:0 4px 14px rgba(139,0,74,.22);}
+.btn-cal-start:hover{box-shadow:0 6px 20px rgba(139,0,74,.32);}
+.btn-cal-start:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;}
+.cal-done{font-size:.7rem;color:var(--green);margin-top:12px;display:none;font-weight:600;}
 
 @media(max-width:900px){.dash{grid-template-columns:1fr;height:auto}.center-panel{order:-1}}
 </style>
@@ -233,15 +238,16 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
 <body>
 <div class="beep-banner" id="beep-banner">🚨 ALERT</div>
 
-<!-- Quiz Mode bar — shown at bottom when quiz mode is active -->
+<!-- Quiz Mode bar -->
 <div class="quiz-mode-bar" id="quiz-mode-bar">
   <div class="quiz-mode-bar-l">
-    <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8.5" stroke="#4ade80" stroke-width="1.5"/><path d="M7 10l2 2 4-4" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8.5" stroke="currentColor" stroke-width="1.5"/><path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <div>
-      <div class="quiz-mode-bar-title">QUIZ MODE ACTIVE</div>
-      <div class="quiz-mode-bar-sub">Tab switching is paused · Camera + gaze detection still running · Open your quiz in another tab</div>
+      <div class="quiz-mode-bar-title">QUIZ MODE ACTIVE — STRICT 2-TAB LIMIT</div>
+      <div class="quiz-mode-bar-sub">Camera + AI detection still running. Opening a 3rd tab will alert your faculty.</div>
     </div>
   </div>
+  <div class="quiz-mode-bar-tabs" id="quiz-tab-counter">TABS: 1 / 2</div>
   <button class="btn-exit-quiz" onclick="exitQuizMode()">✕ Exit Quiz Mode</button>
 </div>
 
@@ -267,10 +273,8 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
 <div class="cal-ov" id="cal-ov">
   <div class="cal-modal">
     <div class="cal-title">🎯 ANGLE CALIBRATION</div>
-    <div class="cal-sub">Place your phone <b style="color:#F2EFE7">to the side of your screen</b>, angled so your face is clearly visible.<br/>Then look at your screen normally and hold still for 3 seconds.</div>
-    <div class="cal-preview">
-      <canvas id="cal-canvas" width="160" height="120"></canvas>
-    </div>
+    <div class="cal-sub">Place your phone <b>to the side of your screen</b>, angled so your face is clearly visible.<br/>Then look at your screen normally and hold still for 3 seconds.</div>
+    <div class="cal-preview"><canvas id="cal-canvas" width="160" height="120"></canvas></div>
     <div class="cal-bar-wrap"><div class="cal-bar" id="cal-bar"></div></div>
     <div class="cal-count" id="cal-count">Press the button below to begin</div>
     <button class="btn-cal-start" id="btn-cal-start" onclick="startCalibration()">▶ Calibrate Normal Position</button>
@@ -280,9 +284,10 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
 </div>
 
 <div class="pdf-overlay" id="pdf-overlay"><div class="pdf-spinner"></div><div class="pdf-msg">GENERATING REPORT…</div></div>
+
 <header class="hdr">
   <div class="hdr-l">
-    <div class="emblem"><svg width="18" height="18" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="9.2" stroke="#F2EFE7" stroke-width="1.3"/><circle cx="11" cy="11" r="3.8" fill="#F2EFE7" opacity=".82"/><line x1="11" y1="1.5" x2="11" y2="5" stroke="#F2EFE7" stroke-width="1.3"/><line x1="11" y1="17" x2="11" y2="20.5" stroke="#F2EFE7" stroke-width="1.3"/><line x1="1.5" y1="11" x2="5" y2="11" stroke="#F2EFE7" stroke-width="1.3"/><line x1="17" y1="11" x2="20.5" y2="11" stroke="#F2EFE7" stroke-width="1.3"/></svg></div>
+    <div class="emblem"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="9.2" stroke="#fff" stroke-width="1.4"/><ellipse cx="11" cy="11" rx="6" ry="3.5" stroke="#fff" stroke-width="1.2" opacity=".7"/><circle cx="11" cy="11" r="2.5" fill="#fff" opacity=".95"/></svg></div>
     <div class="site-title">AI Exam <span>Proctor</span></div>
   </div>
   <div class="hdr-r">
@@ -292,8 +297,9 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
     <button class="btn-logout" onclick="logOut()">← Logout</button>
   </div>
 </header>
+
 <main class="dash">
-  <aside class="panel glass">
+  <aside class="panel">
     <div class="plbl">SESSION INFO</div>
     <div class="iblk"><div class="ilbl">Status</div><div class="spill" id="sys-status"><span class="sdot2"></span>Online</div></div>
     <div class="divider"></div>
@@ -310,21 +316,18 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
     <div class="divider"></div>
     <div class="iblk"><div class="ilbl">Integrity Score</div><div class="ibar-row"><div class="ibar"><div class="ibar-fill" id="int-fill" style="width:100%"></div></div><span class="ibar-pct" id="int-pct">100%</span></div></div>
     <div class="grow"></div>
-    <button class="btn-start" id="start-btn" onclick="startExam()"><span class="shine"></span><svg width="10" height="10" viewBox="0 0 11 11" fill="none" style="margin-right:5px;flex-shrink:0"><polygon points="2,1 10,5.5 2,10" fill="currentColor"/></svg>Start Exam</button>
+    <button class="btn-start" id="start-btn" onclick="startExam()"><svg width="10" height="10" viewBox="0 0 11 11" fill="none" style="margin-right:6px;flex-shrink:0"><polygon points="2,1 10,5.5 2,10" fill="currentColor"/></svg>Start Exam</button>
     <button class="btn-reset" onclick="resetExam()">↺ Reset</button>
     <button class="btn-get-cam" id="btn-get-cam" onclick="openQRPopup()">📱 Get Camera</button>
-    <button class="btn-report" id="btn-report" onclick="generatePDFReport()" disabled>⬇ Download Report</button>
-    <button class="btn-quiz-mode" id="btn-quiz" onclick="enterQuizMode()" disabled title="Enable this before switching to quiz tab">
-      📋 Enable Quiz Mode
-    </button>
+    <button class="btn-quiz-mode" id="btn-quiz" onclick="enterQuizMode()" disabled title="Enable this before opening your quiz tab">📋 Enable Quiz Mode</button>
   </aside>
 
-  <section class="panel glass center-panel" style="display:flex;flex-direction:column;">
+  <section class="panel center-panel">
     <div class="plbl" style="flex-shrink:0;">LIVE FEED</div>
     <div class="model-status" id="model-status">⏳ LOADING AI MODEL…</div>
     <div id="wcam-container" class="wcam-box">
       <div id="cam-ph" class="cam-ph">
-        <svg width="44" height="44" viewBox="0 0 46 46" fill="none"><rect x="2" y="10" width="42" height="28" rx="5" stroke="#F2EFE7" stroke-width="1.5" opacity=".22"/><circle cx="23" cy="24" r="8.5" stroke="#F2EFE7" stroke-width="1.5" opacity=".22"/><circle cx="23" cy="24" r="3.5" fill="#F2EFE7" opacity=".1"/></svg>
+        <svg width="46" height="46" viewBox="0 0 46 46" fill="none"><rect x="2" y="10" width="42" height="28" rx="5" stroke="#fff" stroke-width="1.5" opacity=".35"/><circle cx="23" cy="24" r="8.5" stroke="#fff" stroke-width="1.5" opacity=".35"/><circle cx="23" cy="24" r="3.5" fill="#fff" opacity=".2"/></svg>
         Camera Inactive<span>Start exam to activate</span>
       </div>
       <video id="wcam-video" autoplay muted playsinline></video>
@@ -334,28 +337,28 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
       <div class="face-label" id="face-label">SCANNING…</div>
       <div class="conf-overlay" id="conf-overlay">CONF: —</div>
     </div>
-    <div class="cam-bottom" style="margin-top:7px;">
+    <div class="cam-bottom" style="margin-top:8px;">
       <div class="chip" id="chip-face"><i class="cd g"></i>Face Detected</div>
       <div class="chip" id="chip-gaze"><i class="cd a"></i>Gaze: Forward</div>
       <div class="chip" id="chip-conf"><i class="cd g"></i>Conf: —</div>
       <div class="chip" id="chip-phone-status" style="display:none"><i class="cd g"></i>📱 Live</div>
     </div>
-    <div id="result" class="result-card" style="margin-top:7px;">
+    <div id="result" class="result-card" style="margin-top:8px;">
       <span class="res-ico">🔒</span>
       <div><div class="res-title">Awaiting Session</div><div class="res-sub">Press Start Exam</div></div>
     </div>
-    <div style="margin-top:7px;flex-shrink:0;">
-      <div class="plbl" style="margin-bottom:7px;">ACTIVITY LOG</div>
+    <div style="margin-top:8px;flex-shrink:0;">
+      <div class="plbl" style="margin-bottom:8px;">ACTIVITY LOG</div>
       <div id="timeline" class="log-list"><div class="log-item"><span class="lt">--:--</span><span class="ld"></span><span class="lm">System ready.</span></div></div>
     </div>
   </section>
 
-  <aside class="panel glass">
+  <aside class="panel">
     <div class="plbl">DETECTION MODULES</div>
-    <div class="mod-card"><div class="mod-head"><div class="mod-ico"><svg width="13" height="13" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.3"/><circle cx="7.5" cy="7.5" r="2.2" fill="currentColor" opacity=".55"/><line x1="7.5" y1="1" x2="7.5" y2="3.5" stroke="currentColor" stroke-width="1.3"/><line x1="7.5" y1="11.5" x2="7.5" y2="14" stroke="currentColor" stroke-width="1.3"/><line x1="1" y1="7.5" x2="3.5" y2="7.5" stroke="currentColor" stroke-width="1.3"/><line x1="11.5" y1="7.5" x2="14" y2="7.5" stroke="currentColor" stroke-width="1.3"/></svg></div><span class="mod-name">Focus Detection</span><div class="tog on" id="tog-focus" onclick="toggleMod('focus')"><span></span></div></div><div class="mod-stat on" id="stat-focus">Active · Real-time</div><div class="mod-bar"><div id="bar-focus" style="width:85%"></div></div></div>
-    <div class="mod-card"><div class="mod-head"><div class="mod-ico"><svg width="13" height="13" viewBox="0 0 15 15" fill="none"><ellipse cx="7.5" cy="7.5" rx="6.5" ry="4" stroke="currentColor" stroke-width="1.3"/><circle cx="7.5" cy="7.5" r="2" fill="currentColor" opacity=".55"/><circle cx="7.5" cy="7.5" r=".7" fill="currentColor"/></svg></div><span class="mod-name">Gaze / Head Direction</span><div class="tog on" id="tog-gaze" onclick="toggleMod('gaze')"><span></span></div></div><div class="mod-stat on" id="stat-gaze">Active · Eye-tracking</div><div class="mod-bar"><div id="bar-gaze" style="width:72%"></div></div></div>
-    <div class="mod-card"><div class="mod-head"><div class="mod-ico"><svg width="13" height="13" viewBox="0 0 15 15" fill="none"><rect x="1" y="2.5" width="13" height="10" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M1 6h13" stroke="currentColor" stroke-width="1.3"/><rect x="2.5" y="3.5" width="3" height="2" rx=".4" fill="currentColor" opacity=".5"/></svg></div><span class="mod-name">Tab Switching</span><div class="tog on" id="tog-tab" onclick="toggleMod('tab')"><span></span></div></div><div class="mod-stat on" id="stat-tab">Active · Visibility API</div><div class="mod-bar"><div id="bar-tab" style="width:100%"></div></div></div>
-    <div class="mod-card"><div class="mod-head"><div class="mod-ico"><svg width="13" height="13" viewBox="0 0 15 15" fill="none"><rect x="5" y="1" width="5" height="8" rx="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M2 7.5a5.5 5.5 0 0 0 11 0" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="7.5" y1="13" x2="7.5" y2="15" stroke="currentColor" stroke-width="1.3"/></svg></div><span class="mod-name">Audio Detection</span><div class="tog" id="tog-audio" onclick="toggleMod('audio')"><span></span></div></div><div class="mod-stat" id="stat-audio">Disabled</div><div class="mod-bar"><div id="bar-audio" style="width:0%"></div></div></div>
+    <div class="mod-card"><div class="mod-head"><div class="mod-ico"><svg width="14" height="14" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.3"/><circle cx="7.5" cy="7.5" r="2.2" fill="currentColor" opacity=".55"/></svg></div><span class="mod-name">Focus Detection</span><div class="tog on" id="tog-focus" onclick="toggleMod('focus')"><span></span></div></div><div class="mod-stat on" id="stat-focus">Active · Real-time</div><div class="mod-bar"><div id="bar-focus" style="width:85%"></div></div></div>
+    <div class="mod-card"><div class="mod-head"><div class="mod-ico"><svg width="14" height="14" viewBox="0 0 15 15" fill="none"><ellipse cx="7.5" cy="7.5" rx="6.5" ry="4" stroke="currentColor" stroke-width="1.3"/><circle cx="7.5" cy="7.5" r="2" fill="currentColor" opacity=".55"/></svg></div><span class="mod-name">Gaze / Head Direction</span><div class="tog on" id="tog-gaze" onclick="toggleMod('gaze')"><span></span></div></div><div class="mod-stat on" id="stat-gaze">Active · Eye-tracking</div><div class="mod-bar"><div id="bar-gaze" style="width:72%"></div></div></div>
+    <div class="mod-card"><div class="mod-head"><div class="mod-ico"><svg width="14" height="14" viewBox="0 0 15 15" fill="none"><rect x="1" y="2.5" width="13" height="10" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M1 6h13" stroke="currentColor" stroke-width="1.3"/></svg></div><span class="mod-name">Tab Switching</span><div class="tog on" id="tog-tab" onclick="toggleMod('tab')"><span></span></div></div><div class="mod-stat on" id="stat-tab">Active · Visibility API</div><div class="mod-bar"><div id="bar-tab" style="width:100%"></div></div></div>
+    <div class="mod-card"><div class="mod-head"><div class="mod-ico"><svg width="14" height="14" viewBox="0 0 15 15" fill="none"><rect x="5" y="1" width="5" height="8" rx="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M2 7.5a5.5 5.5 0 0 0 11 0" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></div><span class="mod-name">Audio Detection</span><div class="tog" id="tog-audio" onclick="toggleMod('audio')"><span></span></div></div><div class="mod-stat" id="stat-audio">Disabled</div><div class="mod-bar"><div id="bar-audio" style="width:0%"></div></div></div>
     <div class="divider"></div>
     <div class="stats-grid">
       <div class="stat-box"><div class="stat-n" id="s-checks">0</div><div class="stat-l">Checks</div></div>
@@ -365,61 +368,86 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;back
     </div>
   </aside>
 </main>
+
 <script>
-/* SESSION CHECK */
-const session=JSON.parse(sessionStorage.getItem('proctor_session')||'null');
-if(!session||session.role!=='student'){window.location.href='login.html';}
+'use strict';
 
-const g=id=>document.getElementById(id);
-let sirenAudio=null;
+/* ════════════════════════════════════════════════════════════════
+   SESSION CHECK
+═══════════════════════════════════════════════════════════════ */
+const session = JSON.parse(sessionStorage.getItem('proctor_session')||'null');
+if(!session || session.role!=='student'){ window.location.href='login.html'; }
 
-/* ── TEMPORAL SMOOTHING ──
-   Require 2 consecutive same-label frames before acting.
-   Lower threshold = more responsive detection from side angle.
-*/
-const SMOOTHING_FRAMES = 2;      // consecutive frames needed (webcam)
-const PHONE_SMOOTHING_FRAMES = 2; // reduced for phone — faster detection
-const CONFIDENCE_THRESHOLD = 50; // lowered to 50% — side angle gives lower confidence
-let labelBuffer = [];             // rolling buffer of recent labels
+const g = id => document.getElementById(id);
+let sirenAudio = null;
 
-const S={
-  running:false,startTime:null,
-  alerts:0,tabSwitches:0,gazeAway:0,
-  checks:0,flags:0,integrity:100,
-  ticks:[],mods:{focus:true,gaze:true,tab:true,audio:false},
-  tmModel:null,predLoop:null,
-  alertThreshold:5,bannerTimer:null,
-  alertCooldown:false,lastLabel:'',
-  violationLog:[],screenshots:[],
+const SMOOTHING_FRAMES       = 2;
+const PHONE_SMOOTHING_FRAMES = 2;
+const CONFIDENCE_THRESHOLD   = 50;
+let labelBuffer = [];
+
+const S = {
+  running:false, startTime:null,
+  alerts:0, tabSwitches:0, gazeAway:0, checks:0, flags:0, integrity:100,
+  ticks:[], mods:{focus:true,gaze:true,tab:true,audio:false},
+  tmModel:null, predLoop:null,
+  alertThreshold:5, bannerTimer:null,
+  alertCooldown:false, lastLabel:'',
+  violationLog:[], screenshots:[],
 };
 
-window.addEventListener('load',()=>{
-  g('student-badge').textContent=session.id;
-  g('exam-id').textContent=session.examId;
-  g('cand-id').textContent=session.id;
-  g('subj-id').textContent=session.subject;
-  g('room-code').textContent=session.roomCode||'--';
-  setTimeout(()=>{g('bar-focus').style.width='85%';g('bar-gaze').style.width='72%';g('bar-tab').style.width='100%';},600);
+window.addEventListener('load', ()=>{
+  g('student-badge').textContent = session.id;
+  g('exam-id').textContent       = session.examId;
+  g('cand-id').textContent       = session.id;
+  g('subj-id').textContent       = session.subject;
+  g('room-code').textContent     = session.roomCode || '--';
+  setTimeout(()=>{
+    g('bar-focus').style.width='85%';
+    g('bar-gaze').style.width='72%';
+    g('bar-tab').style.width='100%';
+  }, 500);
   loadModel();
+  setupQuizModeChannel(); // start tab counter immediately so it's ready
 });
 
-function tickClock(){g('hclock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});}
-setInterval(tickClock,1000);tickClock();
-function fmtD(ms){const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return [h,m,sc].map(n=>String(n).padStart(2,'0')).join(':');}
+function tickClock(){ g('hclock').textContent = new Date().toLocaleTimeString('en-US',{hour12:false}); }
+setInterval(tickClock,1000); tickClock();
 
-function loadSiren(){sirenAudio=new Audio('freesound_community-siren-alert-96052.mp3');sirenAudio.preload='auto';sirenAudio.loop=false;}
-function playSiren(){if(!sirenAudio)loadSiren();sirenAudio.currentTime=0;sirenAudio.play().catch(()=>{});}
+function fmtD(ms){
+  const s=Math.floor(ms/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sc=s%60;
+  return [h,m,sc].map(n=>String(n).padStart(2,'0')).join(':');
+}
 
+function loadSiren(){ sirenAudio = new Audio('freesound_community-siren-alert-96052.mp3'); sirenAudio.preload='auto'; sirenAudio.loop=false; }
+function playSiren(){ if(!sirenAudio) loadSiren(); sirenAudio.currentTime=0; sirenAudio.play().catch(()=>{}); }
+
+/* ════════════════════════════════════════════════════════════════
+   MODEL LOADING — with pre-warming for low first-frame latency
+═══════════════════════════════════════════════════════════════ */
 async function loadModel(){
-  const ms=g('model-status');
+  const ms = g('model-status');
   try{
-    S.tmModel=await tmImage.load('model/model.json','model/metadata.json');
-    const classes=S.tmModel.getClassLabels?S.tmModel.getClassLabels():[];
-    ms.textContent='✓ MODEL READY · '+classes.map(c=>c.trim()).join(' / ');
+    S.tmModel = await tmImage.load('model/model.json','model/metadata.json');
+    const classes = S.tmModel.getClassLabels ? S.tmModel.getClassLabels() : [];
+
+    // ── PRE-WARM the model with a dummy 224×224 canvas ──
+    // This forces TensorFlow.js to compile shaders / WebGL kernels NOW
+    // so the first real prediction in startPredictionLoop is ~5× faster.
+    try{
+      const warm = document.createElement('canvas');
+      warm.width = 224; warm.height = 224;
+      const wctx = warm.getContext('2d');
+      wctx.fillStyle = '#888'; wctx.fillRect(0,0,224,224);
+      await S.tmModel.predict(warm);
+      await S.tmModel.predict(warm); // second pass to lock in optimizations
+    } catch(e){}
+
+    ms.textContent = '✓ MODEL READY · ' + classes.map(c=>c.trim()).join(' / ');
     ms.classList.add('loaded');
-    addLog('Model loaded: '+classes.map(c=>'"'+c+'"').join(', '),'ok');
-  }catch(err){
-    ms.textContent='⚠ MODEL FAILED — '+err.message;
+    addLog('Model loaded & pre-warmed: '+classes.map(c=>'"'+c+'"').join(', '),'ok');
+  } catch(err){
+    ms.textContent = '⚠ MODEL FAILED — '+err.message;
     ms.classList.add('error');
     addLog('Model error: '+err.message,'warn');
   }
@@ -427,9 +455,9 @@ async function loadModel(){
 
 async function initCam(){
   try{
-    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false});
-    const v=g('wcam-video');
-    v.style.display='block';v.srcObject=stream;
+    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false});
+    const v = g('wcam-video');
+    v.style.display='block'; v.srcObject = stream;
     g('cam-ph').style.display='none';
     g('wcam-container').classList.add('active');
     g('face-rect').classList.add('show');
@@ -438,271 +466,364 @@ async function initCam(){
     setChip('chip-face','g','Face Detected');
     ['chip-face','chip-gaze','chip-conf'].forEach(id=>g(id).classList.add('lit'));
     addLog('Webcam active.','ok');
-    try{await v.play();}catch(e){}
-    v.addEventListener('canplay',()=>startPredictionLoop(v),{once:true});
-    setTimeout(()=>{if(S.running&&!S.predLoop)startPredictionLoop(v);},2000);
-  }catch(e){
+    try{ await v.play(); } catch(e){}
+    v.addEventListener('canplay', ()=>startPredictionLoop(v), {once:true});
+    setTimeout(()=>{ if(S.running && !S.predLoop) startPredictionLoop(v); }, 1500);
+  } catch(e){
     setChip('chip-face','r','Camera Denied');
     addLog('Camera denied: '+e.message,'warn');
   }
 }
 
+/* Faster prediction interval — 250ms for snappy detection */
 function startPredictionLoop(video){
-  if(S.predLoop)clearInterval(S.predLoop);
-  labelBuffer=[];
-  S.predLoop=setInterval(async()=>{
-    if(!S.running){clearInterval(S.predLoop);return;}
-    if(S.tmModel&&video.readyState>=2&&video.videoWidth>0){
-      try{const preds=await S.tmModel.predict(video);handlePrediction(preds);}catch(e){}
+  if(S.predLoop) clearInterval(S.predLoop);
+  labelBuffer = [];
+  S.predLoop = setInterval(async ()=>{
+    if(!S.running){ clearInterval(S.predLoop); return; }
+    if(S.tmModel && video.readyState>=2 && video.videoWidth>0){
+      try{ const preds = await S.tmModel.predict(video); handlePrediction(preds); } catch(e){}
     }
-  },500); // check every 500ms
+  }, 250); // ~4 predictions/second
 }
 
 function handlePrediction(preds){
-  if(!S.running||!preds||preds.length===0)return;
-  let top=preds.reduce((a,b)=>a.probability>b.probability?a:b);
-  const rawLabel=top.className||'';
-  const label=rawLabel.trim().toLowerCase();
-  const conf=(top.probability*100).toFixed(1);
-  const confNum=parseFloat(conf);
+  if(!S.running || !preds || preds.length===0) return;
+  const top = preds.reduce((a,b)=>a.probability>b.probability?a:b);
+  const rawLabel = top.className || '';
+  const label    = rawLabel.trim().toLowerCase();
+  const conf     = (top.probability*100).toFixed(1);
+  const confNum  = parseFloat(conf);
 
-  g('conf-overlay').textContent=rawLabel.trim()+' · '+conf+'%';
-  setChip('chip-conf',confNum>75?'g':confNum>50?'a':'r','Conf: '+conf+'%');
-  S.checks++;g('s-checks').textContent=S.checks;
+  g('conf-overlay').textContent = rawLabel.trim()+' · '+conf+'%';
+  setChip('chip-conf', confNum>75?'g':confNum>50?'a':'r','Conf: '+conf+'%');
+  S.checks++; g('s-checks').textContent = S.checks;
 
-  // ── TEMPORAL SMOOTHING ──
-  // Only add to buffer if confidence is above threshold
-  if(confNum>=CONFIDENCE_THRESHOLD){
-    labelBuffer.push(label);
-  } else {
-    labelBuffer.push('uncertain');
-  }
-  // Keep only last N frames
+  if(confNum>=CONFIDENCE_THRESHOLD) labelBuffer.push(label);
+  else                              labelBuffer.push('uncertain');
   if(labelBuffer.length>SMOOTHING_FRAMES) labelBuffer.shift();
 
-  // Only act if ALL last N frames agree on same label
   const allSame = labelBuffer.length===SMOOTHING_FRAMES && labelBuffer.every(l=>l===labelBuffer[0]);
   const stableLabel = allSame ? labelBuffer[0] : null;
 
   if(confNum<CONFIDENCE_THRESHOLD){
-    g('face-label').textContent='? SCANNING…';
-    g('face-label').style.color='rgba(242,239,231,.35)';
+    g('face-label').textContent = '? SCANNING…';
+    g('face-label').style.color = 'var(--text3)';
     return;
   }
 
   if(!stableLabel){
-    // Still building consensus — just update display without triggering alerts
-    if(label.includes('focused')){onFocusedDisplay();}
-    else if(label.includes('distracted')){onDistractedDisplay();}
-    else if(label.includes('phone')&&confNum>=90){onPhoneDisplay();}
+    if(label.includes('focused'))         onFocusedDisplay();
+    else if(label.includes('distracted')) onDistractedDisplay();
+    else if(label.includes('phone') && confNum>=90) onPhoneDisplay();
     return;
   }
 
-  // Stable confirmed label — now trigger actual alerts
-  if(stableLabel.includes('focused')){
-    onFocused(conf);
-  } else if(stableLabel.includes('phone')&&confNum>=90){
-    // Require 90% confidence for phone on desktop webcam
-    // to avoid false positives when student looks left/right
-    onPhone(conf);
-  } else if(stableLabel.includes('distracted')||(stableLabel.includes('phone')&&confNum<90)){
-    // Treat low-confidence "phone" as distracted on desktop
-    onDistracted(conf);
-  }
+  if(stableLabel.includes('focused'))                            onFocused(conf);
+  else if(stableLabel.includes('phone') && confNum>=90)          onPhone(conf);
+  else if(stableLabel.includes('distracted') || (stableLabel.includes('phone') && confNum<90)) onDistracted(conf);
 
-  S.lastLabel=stableLabel;
+  S.lastLabel = stableLabel;
   updateIntegrity();
 }
 
-// Display-only (no alerts) — while building consensus
-function onFocusedDisplay(){setFaceRect(false);setChip('chip-gaze','g','Gaze: Forward');g('face-label').textContent='✓ FOCUSED';g('face-label').style.color='var(--green)';g('face-label').style.borderColor='rgba(34,197,94,.4)';}
-function onDistractedDisplay(){setChip('chip-gaze','a','Gaze: Deviating');g('face-label').textContent='⚠ CHECKING…';g('face-label').style.color='var(--amber)';}
-function onPhoneDisplay(){setChip('chip-gaze','r','Phone?');g('face-label').textContent='🔍 VERIFYING…';g('face-label').style.color='var(--red)';}
+function onFocusedDisplay(){ setFaceRect(false); setChip('chip-gaze','g','Gaze: Forward'); g('face-label').textContent='✓ FOCUSED'; g('face-label').style.color='var(--green)'; }
+function onDistractedDisplay(){ setChip('chip-gaze','a','Gaze: Deviating'); g('face-label').textContent='⚠ CHECKING…'; g('face-label').style.color='var(--amber)'; }
+function onPhoneDisplay(){ setChip('chip-gaze','r','Phone?'); g('face-label').textContent='🔍 VERIFYING…'; g('face-label').style.color='var(--red)'; }
 
-// Confirmed — trigger UI + alerts
 function onFocused(conf){
-  setFaceRect(false);
-  setChip('chip-gaze','g','Gaze: Forward');
-  g('face-label').textContent='✓ FOCUSED';
-  g('face-label').style.color='var(--green)';
-  g('face-label').style.borderColor='rgba(34,197,94,.4)';
-  setResult('focused');
-  S.alertCooldown=false;
+  setFaceRect(false); setChip('chip-gaze','g','Gaze: Forward');
+  g('face-label').textContent='✓ FOCUSED'; g('face-label').style.color='var(--green)';
+  setResult('focused'); S.alertCooldown=false;
 }
-
 function onDistracted(conf){
   setChip('chip-gaze','r','Gaze: Deviated');
-  g('face-label').textContent='⚠ DISTRACTED';
-  g('face-label').style.color='var(--amber)';
-  g('face-label').style.borderColor='rgba(245,158,11,.4)';
+  g('face-label').textContent='⚠ DISTRACTED'; g('face-label').style.color='var(--amber)';
   setFaceRect(true);
-  if(!S.alertCooldown&&S.mods.gaze){
+  if(!S.alertCooldown && S.mods.gaze){
     S.alertCooldown=true;
     raiseAlert('Gaze deviated from screen.');
     addLog('Gaze deviated.','warn');
-    S.gazeAway+=2;g('s-away').textContent=S.gazeAway+'s';
-    setTimeout(()=>{S.alertCooldown=false;labelBuffer=[];},3000);
+    S.gazeAway+=2; g('s-away').textContent = S.gazeAway+'s';
+    setTimeout(()=>{ S.alertCooldown=false; labelBuffer=[]; }, 3000);
   }
 }
-
 function onPhone(conf){
   setChip('chip-gaze','r','Phone Detected!');
-  g('face-label').textContent='🚨 PHONE DETECTED';
-  g('face-label').style.color='var(--red)';
-  g('face-label').style.borderColor='rgba(239,68,68,.5)';
+  g('face-label').textContent='🚨 PHONE DETECTED'; g('face-label').style.color='var(--red)';
   setFaceRect(true);
-  if(!S.alertCooldown&&S.mods.focus){
+  if(!S.alertCooldown && S.mods.focus){
     S.alertCooldown=true;
     raiseAlert('Phone/device detected!');
     addLog('Phone detected.','warn');
-    setTimeout(()=>{S.alertCooldown=false;labelBuffer=[];},3000);
+    setTimeout(()=>{ S.alertCooldown=false; labelBuffer=[]; }, 3000);
   }
 }
 
 function setFaceRect(danger){
-  const r=g('face-rect');
-  if(danger){r.classList.add('danger');g('wcam-container').classList.add('alert-state');}
-  else{r.classList.remove('danger');g('wcam-container').classList.remove('alert-state');}
+  const r = g('face-rect');
+  if(danger){ r.classList.add('danger'); g('wcam-container').classList.add('alert-state'); }
+  else      { r.classList.remove('danger'); g('wcam-container').classList.remove('alert-state'); }
 }
 
 function raiseAlert(msg){
-  S.alerts++;S.flags++;
-  const timeStr=new Date().toLocaleTimeString('en-US',{hour12:false});
+  S.alerts++; S.flags++;
+  const timeStr = new Date().toLocaleTimeString('en-US',{hour12:false});
   S.violationLog.push({num:S.alerts,time:timeStr,msg,integrity:Math.max(0,100-S.flags*7)});
-  g('alerts').textContent=S.alerts;g('alerts').classList.add('flagged');
-  g('s-flags').textContent=S.flags;
-  setResult(msg.toLowerCase().includes('phone')?'phone':'cheating',msg);
-  captureFrame(S.alerts,msg,timeStr);
-  setTimeout(()=>{if(S.running)setResult('focused');},3500);
-  const rb=g('btn-report');if(rb)rb.disabled=false;
-  pushToFaculty(msg,timeStr);
-  if(S.alerts%S.alertThreshold===0){
+  g('alerts').textContent = S.alerts; g('alerts').classList.add('flagged');
+  g('s-flags').textContent = S.flags;
+  setResult(msg.toLowerCase().includes('phone')?'phone':'cheating', msg);
+  captureFrame(S.alerts, msg, timeStr);
+  setTimeout(()=>{ if(S.running) setResult('focused'); }, 3500);
+  const rb = g('btn-report'); if(rb) rb.disabled = false;
+  // FIRE-AND-FORGET — does NOT block UI
+  pushToFaculty(msg, timeStr);
+  if(S.alerts % S.alertThreshold === 0){
     playSiren();
-    const banner=g('beep-banner');
-    banner.textContent='🚨 ALERT — '+S.alerts+' VIOLATIONS DETECTED 🚨';
-    banner.style.display='block';
+    const banner = g('beep-banner');
+    banner.textContent = '🚨 ALERT — '+S.alerts+' VIOLATIONS DETECTED 🚨';
+    banner.style.display = 'block';
     addLog('🚨 SIREN: '+S.alerts+' violations!','warn');
     clearTimeout(S.bannerTimer);
-    S.bannerTimer=setTimeout(()=>{banner.style.display='none';},5000);
-    setTimeout(()=>generatePDFReport(true),800);
+    S.bannerTimer = setTimeout(()=>{ banner.style.display = 'none'; }, 5000);
   }
 }
 
-function pushToFaculty(msg,timeStr){
-  fb_logViolation(
-    session.examId,
-    S.alerts,
-    timeStr,
-    msg,
-    Math.max(0,100-S.flags*7)
-  ).catch(()=>{});
+function pushToFaculty(msg, timeStr){
+  // Fire-and-forget, parallel writes via firebase-config.js (Promise.all internally)
+  fb_logViolation(session.examId, S.alerts, timeStr, msg, Math.max(0,100-S.flags*7)).catch(()=>{});
 }
 
 function captureFrame(num,msg,time){
-  const v=g('wcam-video');
-  if(!v||v.readyState<2||!v.videoWidth)return;
-  try{const c=document.createElement('canvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);if(S.screenshots.length<10)S.screenshots.push({num,time,msg,img:c.toDataURL('image/jpeg',0.7)});}catch(e){}
+  const v = g('wcam-video');
+  if(!v||v.readyState<2||!v.videoWidth) return;
+  try{
+    const c = document.createElement('canvas'); c.width=v.videoWidth; c.height=v.videoHeight;
+    c.getContext('2d').drawImage(v,0,0);
+    if(S.screenshots.length<10) S.screenshots.push({num,time,msg,img:c.toDataURL('image/jpeg',0.7)});
+  } catch(e){}
 }
 
 function updateIntegrity(){
-  const ni=Math.max(0,100-S.flags*7);S.integrity=ni;
-  const fill=g('int-fill');fill.style.width=ni+'%';g('int-pct').textContent=ni+'%';
-  if(ni<55){fill.style.background='linear-gradient(90deg,#7f1d1d,#ef4444)';fill.style.boxShadow='0 0 8px rgba(239,68,68,.4)';}
-  else if(ni<78){fill.style.background='linear-gradient(90deg,#78350f,#f59e0b)';fill.style.boxShadow='0 0 8px rgba(245,158,11,.3)';}
-  else{fill.style.background='linear-gradient(90deg,#F2EFE7,rgba(242,239,231,.55))';fill.style.boxShadow='0 0 10px rgba(242,239,231,.22)';}
+  const ni = Math.max(0,100-S.flags*7); S.integrity = ni;
+  const fill = g('int-fill');
+  fill.style.width = ni+'%';
+  g('int-pct').textContent = ni+'%';
+  if(ni<55)      { fill.style.background='var(--red)'; }
+  else if(ni<78) { fill.style.background='var(--amber)'; }
+  else           { fill.style.background='var(--green)'; }
 }
 
 function setResult(state,extra){
-  const el=g('result');el.className='result-card '+state;
-  const map={idle:{e:'🔒',t:'Awaiting Session',s:'Press Start Exam'},focused:{e:'😎',t:'Focused',s:'Candidate attentive'},cheating:{e:'🚨',t:'Cheating Detected',s:extra||'Alert #'+S.alerts},phone:{e:'📱',t:'Phone Detected',s:extra||'Alert #'+S.alerts}};
-  const d=map[state]||map.idle;
-  el.innerHTML='<span class="res-ico">'+d.e+'</span><div><div class="res-title">'+d.t+'</div><div class="res-sub">'+d.s+'</div></div>';
+  const el = g('result'); el.className = 'result-card '+state;
+  const map = {
+    idle:    {e:'🔒',t:'Awaiting Session', s:'Press Start Exam'},
+    focused: {e:'😎',t:'Focused',          s:'Candidate attentive'},
+    cheating:{e:'🚨',t:'Violation Detected',s:extra||'Alert #'+S.alerts},
+    phone:   {e:'📱',t:'Phone Detected',    s:extra||'Alert #'+S.alerts},
+  };
+  const d = map[state] || map.idle;
+  el.innerHTML = '<span class="res-ico">'+d.e+'</span><div><div class="res-title">'+d.t+'</div><div class="res-sub">'+d.s+'</div></div>';
 }
 
 function toggleMod(name){
-  S.mods[name]=!S.mods[name];
-  const tog=g('tog-'+name),st=g('stat-'+name),bar=g('bar-'+name);
-  const labels={focus:'Active · Real-time',gaze:'Active · Eye-tracking',tab:'Active · Visibility API',audio:'Active · Mic'};
-  if(S.mods[name]){tog.classList.add('on');st.textContent=labels[name];st.classList.add('on');bar.style.width=(name==='tab'?100:Math.floor(55+Math.random()*35))+'%';}
-  else{tog.classList.remove('on');st.textContent='Disabled';st.classList.remove('on');bar.style.width='0%';}
+  S.mods[name] = !S.mods[name];
+  const tog=g('tog-'+name), st=g('stat-'+name), bar=g('bar-'+name);
+  const labels = {focus:'Active · Real-time', gaze:'Active · Eye-tracking', tab:'Active · Visibility API', audio:'Active · Mic'};
+  if(S.mods[name]){
+    tog.classList.add('on'); st.textContent=labels[name]; st.classList.add('on');
+    bar.style.width = (name==='tab' ? 100 : Math.floor(55+Math.random()*35))+'%';
+  } else {
+    tog.classList.remove('on'); st.textContent='Disabled'; st.classList.remove('on');
+    bar.style.width='0%';
+  }
 }
 
 function addLog(msg,type){
-  const t=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'});
-  const el=document.createElement('div');el.className='log-item';
-  el.innerHTML='<span class="lt">'+t+'</span><span class="ld '+(type||'')+'"></span><span class="lm">'+msg+'</span>';
-  const tl=g('timeline');tl.prepend(el);
-  while(tl.children.length>22)tl.removeChild(tl.lastChild);
+  const t = new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'});
+  const el = document.createElement('div'); el.className = 'log-item';
+  el.innerHTML = '<span class="lt">'+t+'</span><span class="ld '+(type||'')+'"></span><span class="lm">'+msg+'</span>';
+  const tl = g('timeline'); tl.prepend(el);
+  while(tl.children.length>22) tl.removeChild(tl.lastChild);
 }
-function setChip(id,color,text){g(id).innerHTML='<i class="cd '+color+'"></i>'+text;}
+function setChip(id,color,text){ g(id).innerHTML = '<i class="cd '+color+'"></i>'+text; }
 
-/* ── QUIZ MODE ──
-   When active: tab switching is ALLOWED (student is on quiz tab).
-   Camera/gaze/phone detection continues via the prediction loop — 
-   it doesn't need this tab to be visible because setInterval keeps running.
-*/
-let quizModeActive = false;
+/* ════════════════════════════════════════════════════════════════
+   ⚡ STRICT QUIZ MODE — 2 TAB LIMIT
+   
+   Uses BroadcastChannel ('proctor_quiz_<examId>') so any other tab
+   from the same origin (the quiz tab on this server) heartbeats every
+   800 ms with its unique tabId. The proctor tab counts how many distinct
+   tabs heartbeated within the last 2.5 s.
+   
+   Quiz Mode OFF → behaves like before (visibilitychange = tab switch).
+   Quiz Mode ON  → tab switching is allowed (so student can use the quiz),
+                   BUT if more than 2 tabs are alive at once, an alert
+                   is fired to faculty + a banner shown to student.
+═══════════════════════════════════════════════════════════════ */
+let quizModeActive    = false;
+let quizChannel       = null;
+const myTabId         = 'tab-' + Math.random().toString(36).slice(2,10);
+const tabsAlive       = new Map(); // tabId → lastSeenMs
+let quizTabAlertCooldown = false;
+let quizCheckLoop     = null;
+
+function setupQuizModeChannel(){
+  if(quizChannel || typeof BroadcastChannel === 'undefined') return;
+  try{
+    quizChannel = new BroadcastChannel('proctor_quiz_'+session.examId);
+  }catch(e){
+    addLog('Quiz Mode tab counting unavailable: '+e.message,'warn');
+    return;
+  }
+  // mark my own tab alive
+  tabsAlive.set(myTabId, Date.now());
+
+  quizChannel.onmessage = (e)=>{
+    const d = e.data || {};
+    if(d.type==='heartbeat' && d.tabId){
+      tabsAlive.set(d.tabId, Date.now());
+    } else if(d.type==='close' && d.tabId){
+      tabsAlive.delete(d.tabId);
+    }
+  };
+
+  // Send heartbeat every 800ms — declares "I am here"
+  setInterval(()=>{
+    if(!quizChannel) return;
+    try{ quizChannel.postMessage({type:'heartbeat', tabId:myTabId, role:'proctor', ts:Date.now()}); }catch(e){}
+  }, 800);
+
+  // Check tab count every 600ms — only enforces when quiz mode active
+  quizCheckLoop = setInterval(()=>{
+    pruneStaleTabs();
+    updateTabCounter();
+    enforceQuizTabLimit();
+  }, 600);
+
+  // Tell others we're leaving
+  window.addEventListener('beforeunload', ()=>{
+    try{ if(quizChannel) quizChannel.postMessage({type:'close', tabId:myTabId}); }catch(e){}
+  });
+}
+
+function pruneStaleTabs(){
+  const now = Date.now();
+  for(const [tid,last] of tabsAlive){
+    if(now - last > 2500) tabsAlive.delete(tid);
+  }
+  // always re-mark our own tab
+  tabsAlive.set(myTabId, now);
+}
+
+function updateTabCounter(){
+  const counter = g('quiz-tab-counter');
+  if(!counter) return;
+  const n = tabsAlive.size;
+  counter.textContent = 'TABS: '+n+' / 2';
+  if(quizModeActive && n>2) counter.classList.add('over');
+  else                       counter.classList.remove('over');
+}
+
+function enforceQuizTabLimit(){
+  if(!quizModeActive || !S.running) return;
+  const aliveCount = tabsAlive.size;
+  // 2 tabs allowed: this proctor tab + 1 quiz tab. > 2 = violation.
+  if(aliveCount > 2 && !quizTabAlertCooldown){
+    quizTabAlertCooldown = true;
+    const msg = 'Extra tab opened during Quiz Mode! '+aliveCount+' tabs detected (limit is 2)';
+    raiseAlert(msg);
+    addLog('🚨 '+msg, 'warn');
+    // Show student banner immediately
+    const banner = g('beep-banner');
+    banner.textContent = '⚠️ EXTRA TAB DETECTED — FACULTY NOTIFIED ⚠️';
+    banner.style.display = 'block';
+    clearTimeout(S.bannerTimer);
+    S.bannerTimer = setTimeout(()=>{ banner.style.display='none'; }, 4500);
+    setTimeout(()=>{ quizTabAlertCooldown = false; }, 4000);
+  }
+}
 
 function enterQuizMode(){
-  if(!S.running){ addLog('Start exam first before enabling quiz mode.','warn'); return; }
+  if(!S.running){ addLog('Start exam first before enabling Quiz Mode.','warn'); return; }
   quizModeActive = true;
   g('quiz-mode-bar').classList.add('show');
   g('btn-quiz').disabled = true;
   g('btn-quiz').textContent = '✓ Quiz Mode ON';
-  // Disable Tab Switching module UI (tab switches won't count)
+
+  // Disable Tab Switching counter UI (it now becomes "allowed")
   S.mods.tab = false;
-  const tog=g('tog-tab'),st=g('stat-tab'),bar=g('bar-tab');
-  if(tog){tog.classList.remove('on');}
-  if(st){st.textContent='Paused · Quiz Mode';}
-  if(bar){bar.style.width='0%';}
-  addLog('Quiz mode enabled — tab switching paused.','ok');
-  // Keep prediction loop running — it uses setInterval not visibility
+  const tog=g('tog-tab'), st=g('stat-tab'), bar=g('bar-tab');
+  if(tog){ tog.classList.remove('on'); }
+  if(st) { st.textContent = 'Quiz Mode · Strict 2-tab limit'; }
+  if(bar){ bar.style.width = '100%'; bar.style.background = 'var(--green)'; }
+  addLog('Quiz Mode enabled — strict 2-tab limit active.','ok');
+
+  // Tell faculty dashboard we are in quiz mode
+  try{
+    if(typeof db!=='undefined' && session && session.examId){
+      db.collection('sessions').doc(session.examId).update({ quiz_mode:true, last_update:new Date().toISOString() }).catch(()=>{});
+    }
+  }catch(e){}
 }
 
 function exitQuizMode(){
   quizModeActive = false;
+  quizTabAlertCooldown = false;
   g('quiz-mode-bar').classList.remove('show');
   g('btn-quiz').disabled = false;
   g('btn-quiz').textContent = '📋 Enable Quiz Mode';
-  // Re-enable Tab Switching module
+
   S.mods.tab = true;
-  const tog=g('tog-tab'),st=g('stat-tab'),bar=g('bar-tab');
-  if(tog){tog.classList.add('on');}
-  if(st){st.textContent='Active · Visibility API';}
-  if(bar){bar.style.width='100%';}
-  addLog('Quiz mode disabled — tab switching detection resumed.','warn');
+  const tog=g('tog-tab'), st=g('stat-tab'), bar=g('bar-tab');
+  if(tog){ tog.classList.add('on'); }
+  if(st) { st.textContent='Active · Visibility API'; }
+  if(bar){ bar.style.width='100%'; bar.style.background = 'var(--M)'; }
+  addLog('Quiz Mode disabled — tab switching detection resumed.','warn');
+
+  try{
+    if(typeof db!=='undefined' && session && session.examId){
+      db.collection('sessions').doc(session.examId).update({ quiz_mode:false, last_update:new Date().toISOString() }).catch(()=>{});
+    }
+  }catch(e){}
 }
 
 function onTabSwitch(){
   if(!S.running) return;
-  // If quiz mode is active, IGNORE tab switches entirely
-  if(quizModeActive) return;
+  if(quizModeActive) return;        // quiz mode allows tab switching
   if(!S.mods.tab) return;
-  if(document.hidden){S.tabSwitches++;g('s-tabs').textContent=S.tabSwitches;raiseAlert('Tab switch detected!');addLog('Tab switch #'+S.tabSwitches,'warn');}
+  if(document.hidden){
+    S.tabSwitches++; g('s-tabs').textContent = S.tabSwitches;
+    raiseAlert('Tab switch detected!');
+    addLog('Tab switch #'+S.tabSwitches,'warn');
+  }
 }
 
+/* ════════════════════════════════════════════════════════════════
+   START / RESET EXAM
+═══════════════════════════════════════════════════════════════ */
 function startExam(){
-  if(S.running)return;
-  S.running=true;S.startTime=Date.now();
-  S.alerts=S.tabSwitches=S.gazeAway=S.checks=S.flags=0;
-  S.integrity=100;S.alertCooldown=false;S.violationLog=[];S.screenshots=[];
-  labelBuffer=[];
+  if(S.running) return;
+  S.running = true; S.startTime = Date.now();
+  S.alerts = S.tabSwitches = S.gazeAway = S.checks = S.flags = 0;
+  S.integrity = 100; S.alertCooldown = false;
+  S.violationLog = []; S.screenshots = [];
+  labelBuffer = [];
   loadSiren();
-  const btn=g('start-btn');
-  btn.innerHTML='<span class="shine"></span><svg width="9" height="9" viewBox="0 0 10 10" fill="none" style="margin-right:5px"><rect x="1" y="1" width="3" height="8" rx="1" fill="currentColor"/><rect x="6" y="1" width="3" height="8" rx="1" fill="currentColor"/></svg>Monitoring…';
-  btn.style.cursor='default';btn.onclick=null;
+  const btn = g('start-btn');
+  btn.innerHTML = '<svg width="9" height="9" viewBox="0 0 10 10" fill="none" style="margin-right:6px"><rect x="1" y="1" width="3" height="8" rx="1" fill="currentColor"/><rect x="6" y="1" width="3" height="8" rx="1" fill="currentColor"/></svg>Monitoring…';
+  btn.style.cursor = 'default'; btn.onclick = null;
   if(phoneCamMode && pcPeer){
-    const ph=g('cam-ph');
-    ph.innerHTML='<svg width="44" height="44" viewBox="0 0 46 46" fill="none"><rect x="14" y="2" width="18" height="32" rx="4" stroke="#F2EFE7" stroke-width="1.5" opacity=".4"/><circle cx="23" cy="30" r="2" fill="#F2EFE7" opacity=".4"/></svg>📱 Phone Camera Active<span style="color:rgba(34,197,94,.7)">PC model detecting</span>';
+    const ph = g('cam-ph');
+    ph.innerHTML = '<svg width="46" height="46" viewBox="0 0 46 46" fill="none"><rect x="14" y="2" width="18" height="32" rx="4" stroke="#fff" stroke-width="1.5" opacity=".5"/><circle cx="23" cy="30" r="2" fill="#fff" opacity=".5"/></svg>📱 Phone Camera Active<span style="color:#86efac">PC model detecting</span>';
     ph.style.display='flex';
     g('wcam-container').classList.add('active');
-    g('face-rect').classList.add('show');g('face-label').classList.add('show');g('conf-overlay').classList.add('show');
+    g('face-rect').classList.add('show'); g('face-label').classList.add('show'); g('conf-overlay').classList.add('show');
     setChip('chip-face','g','Phone Camera');
     ['chip-face','chip-gaze','chip-conf'].forEach(id=>g(id).classList.add('lit'));
-    labelBuffer=[];
+    labelBuffer = [];
     startPhoneFrameLoop();
     addLog('Phone camera active — PC model running.','ok');
-    // Show phone live status chip
     const ps = g('chip-phone-status');
     if(ps){ ps.style.display='flex'; ps.classList.add('lit'); ps.innerHTML='<i class="cd g"></i>📱 Live'; }
   } else {
@@ -710,80 +831,62 @@ function startExam(){
   }
   setResult('focused');
   addLog('Session started.','ok');
-  const qb=g('btn-quiz');if(qb)qb.disabled=false;
-  S.ticks.push(setInterval(()=>{g('exam-dur').textContent=fmtD(Date.now()-S.startTime);},1000));
-  document.addEventListener('visibilitychange',onTabSwitch);
+  const qb = g('btn-quiz'); if(qb) qb.disabled = false;
+  S.ticks.push(setInterval(()=>{ g('exam-dur').textContent = fmtD(Date.now()-S.startTime); }, 1000));
+  document.addEventListener('visibilitychange', onTabSwitch);
 }
 
 function resetExam(){
-  S.running=false;
-  if(S.predLoop){clearInterval(S.predLoop);S.predLoop=null;}
-  S.ticks.forEach(clearInterval);S.ticks=[];
-  document.removeEventListener('visibilitychange',onTabSwitch);
-  if(sirenAudio){sirenAudio.pause();sirenAudio.currentTime=0;}
-  g('beep-banner').style.display='none';
-  if(phoneCamMode){try{if(pcConn)pcConn.send({cmd:'stop'});}catch(e){}}
-  phoneCamMode=false;
-  labelBuffer=[];
-  const getCamBtn=g('btn-get-cam');
-  if(getCamBtn){getCamBtn.textContent='📱 Get Camera';getCamBtn.classList.remove('cam-linked');}
-  const v=g('wcam-video');
-  if(v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;}
-  v.style.display='none';g('cam-ph').style.display='flex';
+  S.running = false;
+  if(S.predLoop){ clearInterval(S.predLoop); S.predLoop = null; }
+  S.ticks.forEach(clearInterval); S.ticks = [];
+  document.removeEventListener('visibilitychange', onTabSwitch);
+  if(sirenAudio){ sirenAudio.pause(); sirenAudio.currentTime = 0; }
+  g('beep-banner').style.display = 'none';
+  if(phoneCamMode){ try{ if(pcConn) pcConn.send({cmd:'stop'}); }catch(e){} }
+  phoneCamMode = false;
+  labelBuffer = [];
+  const getCamBtn = g('btn-get-cam');
+  if(getCamBtn){ getCamBtn.textContent = '📱 Get Camera'; getCamBtn.classList.remove('cam-linked'); }
+  const v = g('wcam-video');
+  if(v.srcObject){ v.srcObject.getTracks().forEach(t=>t.stop()); v.srcObject = null; }
+  v.style.display = 'none'; g('cam-ph').style.display = 'flex';
   g('wcam-container').classList.remove('active','alert-state');
   g('face-rect').classList.remove('show','danger');
-  g('face-label').classList.remove('show');g('conf-overlay').classList.remove('show');
+  g('face-label').classList.remove('show'); g('conf-overlay').classList.remove('show');
   ['chip-face','chip-gaze','chip-conf'].forEach(id=>g(id).classList.remove('lit'));
-  g('alerts').textContent='0';g('alerts').classList.remove('flagged');
-  g('exam-dur').textContent='00:00:00';
-  const fill=g('int-fill');fill.style.width='100%';fill.style.background='linear-gradient(90deg,#F2EFE7,rgba(242,239,231,.55))';fill.style.boxShadow='0 0 10px rgba(242,239,231,.22)';
-  g('int-pct').textContent='100%';
-  ['s-checks','s-flags','s-tabs'].forEach(id=>g(id).textContent='0');g('s-away').textContent='0s';
-  setChip('chip-face','g','Face Detected');setChip('chip-gaze','a','Gaze: Forward');setChip('chip-conf','g','Conf: —');
+  g('alerts').textContent = '0'; g('alerts').classList.remove('flagged');
+  g('exam-dur').textContent = '00:00:00';
+  const fill = g('int-fill');
+  fill.style.width = '100%'; fill.style.background = 'var(--green)';
+  g('int-pct').textContent = '100%';
+  ['s-checks','s-flags','s-tabs'].forEach(id=>g(id).textContent='0'); g('s-away').textContent='0s';
+  setChip('chip-face','g','Face Detected'); setChip('chip-gaze','a','Gaze: Forward'); setChip('chip-conf','g','Conf: —');
   setResult('idle');
-  const btn=g('start-btn');
-  btn.innerHTML='<span class="shine"></span><svg width="10" height="10" viewBox="0 0 11 11" fill="none" style="margin-right:5px;flex-shrink:0"><polygon points="2,1 10,5.5 2,10" fill="currentColor"/></svg>Start Exam';
-  btn.style.cursor='pointer';btn.onclick=startExam;
-  const rb=g('btn-report');if(rb)rb.disabled=true;
-  // Exit quiz mode if active
+  const btn = g('start-btn');
+  btn.innerHTML = '<svg width="10" height="10" viewBox="0 0 11 11" fill="none" style="margin-right:6px;flex-shrink:0"><polygon points="2,1 10,5.5 2,10" fill="currentColor"/></svg>Start Exam';
+  btn.style.cursor = 'pointer'; btn.onclick = startExam;
+  const rb = g('btn-report'); if(rb) rb.disabled = true;
   if(quizModeActive) exitQuizMode();
-  const qb=g('btn-quiz');if(qb){qb.disabled=true;qb.textContent='📋 Enable Quiz Mode';}
-  labelBuffer=[];
+  const qb = g('btn-quiz'); if(qb){ qb.disabled = true; qb.textContent = '📋 Enable Quiz Mode'; }
+  labelBuffer = [];
   addLog('Session reset.','');
 }
 
 /* ════════════════════════════════════════════════════════════════
-   PHONE CAMERA BRIDGE + ANGLE CALIBRATION
-   
-   Architecture:
-   • Phone streams JPEG frames to PC via PeerJS
-   • PC draws frames on a 224×224 canvas → runs PC's own trained model
-   • Calibration: student sits normally, system captures the model's
-     "baseline" output probabilities. Future predictions are compared
-     RELATIVE to this baseline, not absolute.
-   
-   This solves the angle problem: if the model says "distracted" 60%
-   even when looking at screen (due to phone angle), calibration
-   records that 60% as the "focused baseline". Future readings are
-   only flagged if they deviate significantly from baseline.
-════════════════════════════════════════════════════════════════ */
-
+   PHONE CAMERA BRIDGE + ANGLE CALIBRATION (unchanged logic)
+═══════════════════════════════════════════════════════════════ */
 let pcPeer        = null;
 let pcConn        = null;
 let phoneCamMode  = false;
 let phoneCanvas   = null;
 let phoneCtx      = null;
 let phoneFrameLoop= null;
-
-/* ── Calibration state ── */
-let calBaseline   = null;  // { focused, distracted, phone } avg probs at normal position
-let calSamples    = [];    // collected prediction samples during calibration
+let calBaseline   = null;
+let calSamples    = [];
 let calInterval   = null;
-let calCanvas2d   = null;  // preview canvas in calibration modal
+let calCanvas2d   = null;
 
-/* ════════════════════
-   QR POPUP
-════════════════════ */
 function openQRPopup(){
   if(!phoneCanvas){
     phoneCanvas = document.createElement('canvas');
@@ -791,77 +894,60 @@ function openQRPopup(){
     phoneCtx = phoneCanvas.getContext('2d');
   }
   g('qr-ov').classList.add('show');
-  g('qr-stat').className='qr-stat';
-  g('qr-stat').textContent='⏳ Setting up connection…';
-  g('qr-box').innerHTML='';
-  if(pcPeer){try{pcPeer.destroy();}catch(e){} pcPeer=null;}
+  g('qr-stat').className = 'qr-stat';
+  g('qr-stat').textContent = '⏳ Setting up connection…';
+  g('qr-box').innerHTML = '';
+  if(pcPeer){ try{ pcPeer.destroy(); }catch(e){} pcPeer = null; }
   pcPeer = new Peer({debug:0});
-  pcPeer.on('open', peerId=>{
-    // Build URL that works on both GitHub Pages and localhost
+  pcPeer.on('open', peerId => {
     const origin = window.location.origin;
-    const path   = window.location.pathname.replace(/\/[^\/]*$/, '/');
+    const path   = window.location.pathname.replace(/\/[^\/]*$/,'/');
     const url    = origin + path + 'phone-cam.html?pid=' + encodeURIComponent(peerId);
     try{
       new QRCode(g('qr-box'),{text:url,width:164,height:164,colorDark:'#1a0010',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
-    }catch(e){
-      g('qr-box').innerHTML='<div style="font-size:.55rem;color:#8B004A;padding:8px;word-break:break-all">'+url+'</div>';
+    } catch(e){
+      g('qr-box').innerHTML = '<div style="font-size:.55rem;color:#8B004A;padding:8px;word-break:break-all">'+url+'</div>';
     }
-    g('qr-stat').textContent='⏳ Waiting for phone to scan…';
+    g('qr-stat').textContent = '⏳ Waiting for phone to scan…';
     pcPeer.on('connection', conn=>{
-      pcConn=conn;
-      conn.on('open',()=>{
-        phoneCamMode=true;
-        g('qr-stat').className='qr-stat ok';
-        g('qr-stat').textContent='✅ Phone connected! Calibrate angle, then Start Exam.';
-        const btn=g('btn-get-cam');
-        if(btn){btn.textContent='📱 Calibrate & Start';btn.classList.add('cam-linked');}
+      pcConn = conn;
+      conn.on('open', ()=>{
+        phoneCamMode = true;
+        g('qr-stat').className = 'qr-stat ok';
+        g('qr-stat').textContent = '✅ Phone connected! Calibrate angle, then Start Exam.';
+        const btn = g('btn-get-cam');
+        if(btn){ btn.textContent='📱 Calibrate & Start'; btn.classList.add('cam-linked'); }
         addLog('Phone connected.','ok');
-        // Auto-open calibration after 1s
         setTimeout(()=>{ g('qr-ov').classList.remove('show'); openCalibration(); }, 1200);
       });
       conn.on('data', data=>{
         if(!data) return;
-        if(data.type==='frame' && data.blob){
-          receiveFrame(data.blob);
-        } else if(data instanceof ArrayBuffer){
-          // fallback: raw binary frame
-          receiveFrame(data);
-        }
+        if(data.type==='frame' && data.blob)        receiveFrame(data.blob);
+        else if(data instanceof ArrayBuffer)         receiveFrame(data);
       });
-      conn.on('close',()=>{ addLog('Phone disconnected.','warn'); });
+      conn.on('close', ()=>{ addLog('Phone disconnected.','warn'); });
       conn.on('error', ()=>{ addLog('Phone cam error.','warn'); });
     });
   });
   pcPeer.on('error', e=>{
-    g('qr-stat').className='qr-stat err';
-    g('qr-stat').textContent='⚠ '+e.type;
+    g('qr-stat').className = 'qr-stat err';
+    g('qr-stat').textContent = '⚠ '+e.type;
   });
 }
 function closeQRPopup(){ g('qr-ov').classList.remove('show'); }
 
-/* ════════════════════
-   RECEIVE FRAMES FROM PHONE
-   Draw onto phoneCanvas (224×224) for model prediction
-════════════════════ */
-// Track last frame time — used to detect phone screen off / background
 let lastFrameTime = 0;
-
 function receiveFrame(data){
-  if(!phoneCanvas||!phoneCtx) return;
-  lastFrameTime = Date.now(); // ← update every time a frame arrives
+  if(!phoneCanvas || !phoneCtx) return;
+  lastFrameTime = Date.now();
   let blob;
-  if(data instanceof Blob){
-    blob = data;
-  } else if(data instanceof ArrayBuffer){
-    blob = new Blob([data], {type:'image/jpeg'});
-  } else if(data && data.buffer instanceof ArrayBuffer){
-    blob = new Blob([data.buffer], {type:'image/jpeg'});
-  } else {
-    return;
-  }
-  const url=URL.createObjectURL(blob);
-  const img=new Image();
-  img.onload=()=>{
+  if(data instanceof Blob)                    blob = data;
+  else if(data instanceof ArrayBuffer)        blob = new Blob([data],{type:'image/jpeg'});
+  else if(data && data.buffer instanceof ArrayBuffer) blob = new Blob([data.buffer],{type:'image/jpeg'});
+  else return;
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  img.onload = ()=>{
     phoneCtx.clearRect(0,0,224,224);
     phoneCtx.drawImage(img,0,0,224,224);
     URL.revokeObjectURL(url);
@@ -870,29 +956,18 @@ function receiveFrame(data){
       calCanvas2d.drawImage(img,0,0,160,120);
     }
   };
-  img.onerror=()=>{ URL.revokeObjectURL(url); };
-  img.src=url;
+  img.onerror = ()=>{ URL.revokeObjectURL(url); };
+  img.src = url;
 }
 
-/* ════════════════════
-   CALIBRATION
-   Collect 15 prediction samples over 3 seconds
-   while student looks at screen normally.
-   Average them → that IS the "focused" baseline.
-   Store per-class average probability.
-════════════════════ */
 function openCalibration(){
-  if(!phoneCamMode){
-    // PC webcam mode — skip calibration (model trained on same angle)
-    return;
-  }
-  const cc=g('cal-canvas');
-  if(cc) calCanvas2d=cc.getContext('2d');
+  if(!phoneCamMode) return;
+  const cc = g('cal-canvas'); if(cc) calCanvas2d = cc.getContext('2d');
   g('cal-ov').classList.add('show');
-  g('cal-done').style.display='none';
-  g('btn-cal-start').disabled=false;
-  g('cal-count').textContent='Press the button below to begin';
-  g('cal-bar').style.width='0%';
+  g('cal-done').style.display = 'none';
+  g('btn-cal-start').disabled = false;
+  g('cal-count').textContent = 'Press the button below to begin';
+  g('cal-bar').style.width = '0%';
   addLog('Calibration opened.','ok');
 }
 function closeCalibration(){ g('cal-ov').classList.remove('show'); }
@@ -900,292 +975,224 @@ function closeCalibration(){ g('cal-ov').classList.remove('show'); }
 function startCalibration(){
   if(!S.tmModel){ addLog('Model not loaded yet.','warn'); return; }
   if(!phoneCanvas){ addLog('Phone not connected.','warn'); return; }
-  calSamples=[];
-  g('btn-cal-start').disabled=true;
-  g('cal-done').style.display='none';
-
-  const TOTAL=15; // 15 samples over ~3 seconds
-  let count=0;
-
-  g('cal-count').textContent='Look at your screen normally… ('+TOTAL+' samples)';
-
-  calInterval=setInterval(async()=>{
-    if(!S.tmModel||!phoneCanvas) return;
+  calSamples = [];
+  g('btn-cal-start').disabled = true;
+  g('cal-done').style.display = 'none';
+  const TOTAL = 15; let count = 0;
+  g('cal-count').textContent = 'Look at your screen normally… ('+TOTAL+' samples)';
+  calInterval = setInterval(async ()=>{
+    if(!S.tmModel || !phoneCanvas) return;
     try{
-      const preds=await S.tmModel.predict(phoneCanvas);
-      // Store raw probability array
-      const sample={};
-      preds.forEach(p=>{ sample[(p.className||'').trim().toLowerCase()]=p.probability; });
-      calSamples.push(sample);
-      count++;
-      const pct=Math.round((count/TOTAL)*100);
-      g('cal-bar').style.width=pct+'%';
-      g('cal-count').textContent='Calibrating… '+count+'/'+TOTAL+' samples';
-
-      if(count>=TOTAL){
-        clearInterval(calInterval);
-        finishCalibration();
-      }
-    }catch(e){}
-  }, 200); // every 200ms = 15 samples in 3 seconds
+      const preds = await S.tmModel.predict(phoneCanvas);
+      const sample = {};
+      preds.forEach(p=>{ sample[(p.className||'').trim().toLowerCase()] = p.probability; });
+      calSamples.push(sample); count++;
+      const pct = Math.round((count/TOTAL)*100);
+      g('cal-bar').style.width = pct+'%';
+      g('cal-count').textContent = 'Calibrating… '+count+'/'+TOTAL+' samples';
+      if(count>=TOTAL){ clearInterval(calInterval); finishCalibration(); }
+    } catch(e){}
+  }, 200);
 }
-
 function finishCalibration(){
-  // Average all collected samples per class
-  const avg={};
+  const avg = {};
   if(calSamples.length===0){ addLog('Calibration failed — no samples.','warn'); return; }
   Object.keys(calSamples[0]).forEach(cls=>{
-    avg[cls]=calSamples.reduce((sum,s)=>sum+(s[cls]||0),0)/calSamples.length;
+    avg[cls] = calSamples.reduce((sum,s)=>sum+(s[cls]||0),0) / calSamples.length;
   });
-  calBaseline=avg;
-
-  const f=(calBaseline['focused']||0)*100;
-  const d=(calBaseline['distracted']||0)*100;
-  const p=(calBaseline['using phone']||0)*100;
-
-  g('cal-bar').style.width='100%';
-  g('cal-bar').style.background='linear-gradient(90deg,#22c55e,#16a34a)';
-  g('cal-count').textContent=
-    'Baseline — Focused: '+f.toFixed(0)+'% · Distracted: '+d.toFixed(0)+'% · Phone: '+p.toFixed(0)+'%';
-  g('cal-done').style.display='block';
-  g('btn-cal-start').disabled=false;
-  g('btn-cal-start').textContent='↺ Re-calibrate';
+  calBaseline = avg;
+  const f=(calBaseline['focused']||0)*100, d=(calBaseline['distracted']||0)*100, p=(calBaseline['using phone']||0)*100;
+  g('cal-bar').style.width = '100%';
+  g('cal-bar').style.background = 'var(--green)';
+  g('cal-count').textContent = 'Baseline — Focused: '+f.toFixed(0)+'% · Distracted: '+d.toFixed(0)+'% · Phone: '+p.toFixed(0)+'%';
+  g('cal-done').style.display = 'block';
+  g('btn-cal-start').disabled = false;
+  g('btn-cal-start').textContent = '↺ Re-calibrate';
   addLog('Calibration done. Focused baseline: '+f.toFixed(0)+'%','ok');
 }
 
-/* ════════════════════════════════════════════════════════════════
-   CALIBRATED PREDICTION HANDLER
-   Called instead of the raw handlePrediction when in phone cam mode.
-   
-   The calibration tells us: "When student looks at screen normally,
-   the model gives these probabilities."
-   
-   We compute a DELTA — how much each class changes from baseline.
-   If focused drops significantly AND distracted/phone rises → alert.
-   
-   This makes detection relative to the physical setup, not absolute.
-════════════════════════════════════════════════════════════════ */
 function handleCalibratedPrediction(preds){
-  if(!S.running||!preds||preds.length===0) return;
-
-  // Get raw probabilities
+  if(!S.running || !preds || preds.length===0) return;
   let rawLabel='', rawConf=0;
-  preds.forEach(p=>{
-    if(p.probability>rawConf){ rawConf=p.probability; rawLabel=(p.className||'').trim().toLowerCase(); }
-  });
-
-  const confNum=parseFloat((rawConf*100).toFixed(1));
-
-  // Update display
-  g('conf-overlay').textContent=rawLabel+' · '+confNum.toFixed(1)+'%';
-  setChip('chip-conf',confNum>75?'g':confNum>50?'a':'r','Conf: '+confNum.toFixed(1)+'%');
-  S.checks++; g('s-checks').textContent=S.checks;
-
-  // ── TRUST RAW MODEL DIRECTLY — no delta/calibration ──
-  // Calibration was inverting results (baseline 1% = broken)
-  // Model was retrained at exact phone angle, so trust it directly
+  preds.forEach(p=>{ if(p.probability>rawConf){ rawConf=p.probability; rawLabel=(p.className||'').trim().toLowerCase(); } });
+  const confNum = parseFloat((rawConf*100).toFixed(1));
+  g('conf-overlay').textContent = rawLabel+' · '+confNum.toFixed(1)+'%';
+  setChip('chip-conf', confNum>75?'g':confNum>50?'a':'r','Conf: '+confNum.toFixed(1)+'%');
+  S.checks++; g('s-checks').textContent = S.checks;
   const effectiveLabel = rawLabel;
-
-  // ── TEMPORAL SMOOTHING ──
-  if(confNum >= CONFIDENCE_THRESHOLD){
-    labelBuffer.push(effectiveLabel);
-  } else {
-    labelBuffer.push('uncertain');
+  if(confNum>=CONFIDENCE_THRESHOLD) labelBuffer.push(effectiveLabel);
+  else                              labelBuffer.push('uncertain');
+  if(labelBuffer.length>PHONE_SMOOTHING_FRAMES) labelBuffer.shift();
+  const allSame = labelBuffer.length===PHONE_SMOOTHING_FRAMES && labelBuffer.every(l=>l===labelBuffer[0]);
+  const stableLabel = allSame ? labelBuffer[0] : null;
+  if(confNum<CONFIDENCE_THRESHOLD){
+    g('face-label').textContent='? SCANNING…'; g('face-label').style.color='var(--text3)'; return;
   }
-  if(labelBuffer.length > PHONE_SMOOTHING_FRAMES) labelBuffer.shift();
-
-  const allSame    = labelBuffer.length===PHONE_SMOOTHING_FRAMES && labelBuffer.every(l=>l===labelBuffer[0]);
-  const stableLabel= allSame ? labelBuffer[0] : null;
-
-  if(confNum < CONFIDENCE_THRESHOLD){
-    g('face-label').textContent='? SCANNING…';
-    g('face-label').style.color='rgba(242,239,231,.35)';
-    return;
-  }
-
   if(!stableLabel){
-    if(effectiveLabel==='focused')        onFocusedDisplay();
+    if(effectiveLabel==='focused')         onFocusedDisplay();
     else if(effectiveLabel==='distracted') onDistractedDisplay();
     else if(effectiveLabel==='using phone') onPhoneDisplay();
     return;
   }
-
-  // Stable — trigger alerts
-  if(stableLabel==='focused'){
-    onFocused(confNum.toFixed(1));
-  } else if(stableLabel==='using phone'){
-    onPhone(confNum.toFixed(1));
-  } else if(stableLabel==='distracted'){
-    onDistracted(confNum.toFixed(1));
-  }
-
-  S.lastLabel=stableLabel;
+  if(stableLabel==='focused')          onFocused(confNum.toFixed(1));
+  else if(stableLabel==='using phone') onPhone(confNum.toFixed(1));
+  else if(stableLabel==='distracted')  onDistracted(confNum.toFixed(1));
+  S.lastLabel = stableLabel;
   updateIntegrity();
 }
 
-/* ════════════════════
-   PHONE FRAME PREDICTION LOOP
-   Runs on PC — reads phoneCanvas every 500ms
-   Uses calibrated handler when phone cam is active
-════════════════════ */
 function startPhoneFrameLoop(){
   if(phoneFrameLoop) clearInterval(phoneFrameLoop);
-  labelBuffer=[];
-  lastFrameTime = Date.now(); // initialise
-
-  // ── PHONE SCREEN OFF / BACKGROUND DETECTOR ──
-  // If no frame arrives for 4 seconds → phone screen turned off
-  // or student minimized camera to use another app
-  const FREEZE_TIMEOUT = 4000; // 4 seconds no frame = suspicious
+  labelBuffer = [];
+  lastFrameTime = Date.now();
+  const FREEZE_TIMEOUT = 4000;
   let phoneFreezeCooldown = false;
-
-  phoneFrameLoop=setInterval(async()=>{
-    if(!S.running){clearInterval(phoneFrameLoop);return;}
-    if(!S.tmModel||!phoneCanvas) return;
-
-    // ── Check if phone stopped sending frames ──
+  phoneFrameLoop = setInterval(async ()=>{
+    if(!S.running){ clearInterval(phoneFrameLoop); return; }
+    if(!S.tmModel || !phoneCanvas) return;
     const timeSinceLastFrame = Date.now() - lastFrameTime;
-    if(lastFrameTime > 0 && timeSinceLastFrame > FREEZE_TIMEOUT){
-      // Phone camera frozen — screen off or backgrounded
+    if(lastFrameTime>0 && timeSinceLastFrame>FREEZE_TIMEOUT){
       if(!phoneFreezeCooldown && S.mods.focus){
         phoneFreezeCooldown = true;
-
-        // Update phone status chip
-        const ps = g('chip-phone-status');
-        if(ps){ ps.innerHTML='<i class="cd r"></i>📵 Offline'; }
-
-        // Show alert on student screen
+        const ps = g('chip-phone-status'); if(ps){ ps.innerHTML='<i class="cd r"></i>📵 Offline'; }
         setChip('chip-gaze','r','Phone Offline!');
         g('face-label').textContent='📵 PHONE SCREEN OFF';
         g('face-label').style.color='var(--red)';
         setFaceRect(true);
-
-        // Raise violation alert
         raiseAlert('Phone screen turned off — possible AI tool use!');
         addLog('📵 Phone screen turned off or camera backgrounded!','warn');
-
-        // Reset cooldown after 8 seconds
         setTimeout(()=>{
-          phoneFreezeCooldown=false;
-          // Restore chip when frames resume
+          phoneFreezeCooldown = false;
           if(Date.now()-lastFrameTime < FREEZE_TIMEOUT){
-            const ps2=g('chip-phone-status');
-            if(ps2){ ps2.innerHTML='<i class="cd g"></i>📱 Live'; }
+            const ps2 = g('chip-phone-status'); if(ps2){ ps2.innerHTML='<i class="cd g"></i>📱 Live'; }
           }
         }, 8000);
       }
-      return; // skip model prediction while frozen
+      return;
     }
-
-    // Phone is sending frames normally — run model
-    try{
-      const preds=await S.tmModel.predict(phoneCanvas);
-      handleCalibratedPrediction(preds);
-    }catch(e){}
-  },500);
+    try{ const preds = await S.tmModel.predict(phoneCanvas); handleCalibratedPrediction(preds); } catch(e){}
+  }, 250); // also faster for phone camera
   S.ticks.push(phoneFrameLoop);
 }
 
 function logOut(){
-  try{if(pcConn)pcConn.close();}catch(e){}
-  try{if(pcPeer)pcPeer.destroy();}catch(e){}
+  try{ if(pcConn) pcConn.close(); }catch(e){}
+  try{ if(pcPeer) pcPeer.destroy(); }catch(e){}
+  try{ if(quizChannel){ quizChannel.postMessage({type:'close', tabId:myTabId}); quizChannel.close(); } }catch(e){}
+  if(quizCheckLoop) clearInterval(quizCheckLoop);
   fb_endSession(session.examId).catch(()=>{});
   sessionStorage.removeItem('proctor_session');
   window.location.href='login.html';
 }
 
+/* ════════════════════════════════════════════════════════════════
+   PDF REPORT (light-themed)
+═══════════════════════════════════════════════════════════════ */
 async function generatePDFReport(auto=false){
-  if(!S.violationLog||S.violationLog.length===0){addLog('No violations to report.','warn');return;}
-  const overlay=g('pdf-overlay');overlay.classList.add('show');
+  if(!S.violationLog || S.violationLog.length===0){ addLog('No violations to report.','warn'); return; }
+  const overlay = g('pdf-overlay'); overlay.classList.add('show');
   try{
-    const {jsPDF}=window.jspdf;
-    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-    const W=210,H=297,margin=15;let y=margin;
-    const duration=S.startTime?fmtD(Date.now()-S.startTime):'00:00:00';
-    const intScore=g('int-pct').textContent;
-    const genTime=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
-    const pctVal=parseInt(intScore)||100;
-    doc.setFillColor(11,11,11);doc.rect(0,0,W,H,'F');
-    doc.setFillColor(139,0,74);doc.rect(0,0,W,28,'F');
-    doc.setFillColor(239,68,68);doc.rect(0,28,W,1.2,'F');
-    doc.setFillColor(50,10,30);doc.circle(margin+8,14,8,'F');
-    doc.setDrawColor(242,239,231);doc.setLineWidth(0.5);doc.circle(margin+8,14,8,'S');
-    doc.setDrawColor(242,239,231);doc.setLineWidth(0.6);doc.ellipse(margin+8,14,4.5,2.5,'S');
-    doc.setFillColor(242,239,231);doc.circle(margin+8,14,1.3,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(242,239,231);doc.text('AI EXAM PROCTOR',margin+20,11);
-    doc.setFontSize(8);doc.setTextColor(242,200,220);doc.text('FACULTY VIOLATION REPORT',margin+20,17);
-    doc.setFontSize(7);doc.setTextColor(200,195,188);doc.text('CONFIDENTIAL — FOR FACULTY USE ONLY',margin+20,23);
-    doc.setFontSize(6.5);doc.setTextColor(200,195,188);doc.text('Generated: '+genTime,W-margin,11,{align:'right'});
-    y=38;
-    const cards=[{label:'EXAM ID',value:session.examId},{label:'CANDIDATE',value:session.name},{label:'COLLEGE ID',value:session.id},{label:'SUBJECT',value:session.subject},{label:'DURATION',value:duration},{label:'VIOLATIONS',value:String(S.alerts)}];
-    const cW=(W-margin*2-10)/3,cH=18;
+    const {jsPDF} = window.jspdf;
+    const doc = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const W=210, H=297, margin=15; let y=margin;
+    const duration = S.startTime ? fmtD(Date.now()-S.startTime) : '00:00:00';
+    const intScore = g('int-pct').textContent;
+    const genTime  = new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
+    const pctVal   = parseInt(intScore) || 100;
+
+    // Light cream background
+    doc.setFillColor(248,247,245); doc.rect(0,0,W,H,'F');
+    // Maroon header band
+    doc.setFillColor(139,0,74); doc.rect(0,0,W,28,'F');
+    // Logo circle
+    doc.setFillColor(255,255,255); doc.circle(margin+8,14,8,'F');
+    doc.setDrawColor(139,0,74); doc.setLineWidth(0.6); doc.ellipse(margin+8,14,4.5,2.5,'S');
+    doc.setFillColor(139,0,74); doc.circle(margin+8,14,1.4,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(255,255,255); doc.text('AI EXAM PROCTOR',margin+20,11);
+    doc.setFontSize(8);  doc.setTextColor(255,220,235); doc.text('FACULTY VIOLATION REPORT',margin+20,17);
+    doc.setFontSize(7);  doc.setTextColor(255,220,235); doc.text('CONFIDENTIAL — FOR FACULTY USE ONLY',margin+20,23);
+    doc.setFontSize(6.5);doc.setTextColor(255,220,235); doc.text('Generated: '+genTime,W-margin,11,{align:'right'});
+    y = 38;
+
+    const cards = [
+      {label:'EXAM ID',value:session.examId},{label:'CANDIDATE',value:session.name},
+      {label:'COLLEGE ID',value:session.id},{label:'SUBJECT',value:session.subject},
+      {label:'DURATION',value:duration},{label:'VIOLATIONS',value:String(S.alerts)}];
+    const cW=(W-margin*2-10)/3, cH=18;
     cards.forEach((c,i)=>{
-      const col=i%3,row=Math.floor(i/3),cx=margin+col*(cW+5),cy=y+row*(cH+5);
-      doc.setFillColor(25,20,22);doc.setDrawColor(60,20,40);doc.setLineWidth(0.3);doc.roundedRect(cx,cy,cW,cH,2,2,'FD');
-      doc.setFont('helvetica','bold');doc.setFontSize(5.5);doc.setTextColor(139,0,74);doc.text(c.label,cx+4,cy+6);
-      doc.setFont('helvetica','bold');doc.setFontSize(9);
-      if(c.label==='VIOLATIONS'&&S.alerts>=5)doc.setTextColor(239,68,68);else doc.setTextColor(242,239,231);
+      const col=i%3, row=Math.floor(i/3), cx=margin+col*(cW+5), cy=y+row*(cH+5);
+      doc.setFillColor(255,255,255); doc.setDrawColor(226,221,216); doc.setLineWidth(0.3);
+      doc.roundedRect(cx,cy,cW,cH,2,2,'FD');
+      doc.setFont('helvetica','bold'); doc.setFontSize(5.5); doc.setTextColor(139,0,74); doc.text(c.label,cx+4,cy+6);
+      doc.setFont('helvetica','bold'); doc.setFontSize(9);
+      if(c.label==='VIOLATIONS' && S.alerts>=5) doc.setTextColor(220,38,38); else doc.setTextColor(26,26,26);
       doc.text(c.value,cx+4,cy+14);
     });
-    y+=2*(cH+5)+8;
-    doc.setFillColor(30,25,28);doc.setDrawColor(60,20,40);doc.setLineWidth(0.3);doc.roundedRect(margin,y,W-margin*2,14,2,2,'FD');
-    doc.setFont('helvetica','bold');doc.setFontSize(6);doc.setTextColor(200,195,188);doc.text('INTEGRITY SCORE',margin+4,y+5.5);
-    const bX=margin+45,bW=W-margin*2-55,bH=4,bY=y+4.5;
-    doc.setFillColor(40,35,38);doc.roundedRect(bX,bY,bW,bH,1,1,'F');
-    const bColor=pctVal<55?[239,68,68]:pctVal<78?[245,158,11]:[34,197,94];
-    doc.setFillColor(...bColor);doc.roundedRect(bX,bY,(bW*pctVal)/100,bH,1,1,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...bColor);doc.text(intScore,W-margin-4,y+9,{align:'right'});
-    y+=22;
-    doc.setFillColor(30,25,28);doc.setDrawColor(60,20,40);doc.roundedRect(margin,y,W-margin*2,8,2,2,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(139,0,74);doc.text('VIOLATION LOG',margin+4,y+5.5);
-    doc.setFontSize(6);doc.setTextColor(200,195,188);doc.text('('+S.violationLog.length+' total)',margin+52,y+5.5);
-    y+=11;
-    doc.setFillColor(139,0,74);doc.rect(margin,y,W-margin*2,7,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(242,239,231);
-    doc.text('#',margin+3,y+4.8);doc.text('TIME',margin+12,y+4.8);doc.text('VIOLATION',margin+35,y+4.8);doc.text('INTEGRITY',W-margin-3,y+4.8,{align:'right'});
-    y+=7;
+    y += 2*(cH+5)+8;
+
+    doc.setFillColor(255,255,255); doc.setDrawColor(226,221,216); doc.setLineWidth(0.3);
+    doc.roundedRect(margin,y,W-margin*2,14,2,2,'FD');
+    doc.setFont('helvetica','bold'); doc.setFontSize(6); doc.setTextColor(74,74,74); doc.text('INTEGRITY SCORE',margin+4,y+5.5);
+    const bX=margin+45, bW=W-margin*2-55, bH=4, bY=y+4.5;
+    doc.setFillColor(240,238,235); doc.roundedRect(bX,bY,bW,bH,1,1,'F');
+    const bColor = pctVal<55?[220,38,38]:pctVal<78?[217,119,6]:[22,163,74];
+    doc.setFillColor(...bColor); doc.roundedRect(bX,bY,(bW*pctVal)/100,bH,1,1,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...bColor); doc.text(intScore,W-margin-4,y+9,{align:'right'});
+    y += 22;
+
+    doc.setFillColor(255,255,255); doc.setDrawColor(226,221,216); doc.roundedRect(margin,y,W-margin*2,8,2,2,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(139,0,74); doc.text('VIOLATION LOG',margin+4,y+5.5);
+    doc.setFontSize(6); doc.setTextColor(136,136,136); doc.text('('+S.violationLog.length+' total)',margin+52,y+5.5);
+    y += 11;
+
+    doc.setFillColor(139,0,74); doc.rect(margin,y,W-margin*2,7,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(255,255,255);
+    doc.text('#',margin+3,y+4.8); doc.text('TIME',margin+12,y+4.8); doc.text('VIOLATION',margin+35,y+4.8); doc.text('INTEGRITY',W-margin-3,y+4.8,{align:'right'});
+    y += 7;
     S.violationLog.forEach((v,i)=>{
-      if(y>H-30){doc.addPage();doc.setFillColor(11,11,11);doc.rect(0,0,W,H,'F');y=margin;}
-      doc.setFillColor(i%2===0?[20,16,18]:[25,20,22]);doc.rect(margin,y,W-margin*2,7,'F');
-      const isPhone=v.msg.toLowerCase().includes('phone'),isTab=v.msg.toLowerCase().includes('tab');
-      doc.setFillColor(...(isPhone?[245,158,11]:isTab?[100,150,255]:[239,68,68]));doc.rect(margin,y,1.5,7,'F');
-      doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(200,195,188);
-      doc.text(String(v.num),margin+3,y+4.8);doc.text(v.time,margin+12,y+4.8);
+      if(y>H-30){ doc.addPage(); doc.setFillColor(248,247,245); doc.rect(0,0,W,H,'F'); y = margin; }
+      doc.setFillColor(...(i%2===0?[255,255,255]:[248,247,245])); doc.rect(margin,y,W-margin*2,7,'F');
+      const isPhone=v.msg.toLowerCase().includes('phone'), isTab=v.msg.toLowerCase().includes('tab');
+      doc.setFillColor(...(isPhone?[217,119,6]:isTab?[30,64,175]:[220,38,38])); doc.rect(margin,y,1.5,7,'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(74,74,74);
+      doc.text(String(v.num),margin+3,y+4.8); doc.text(v.time,margin+12,y+4.8);
       doc.text(v.msg.length>50?v.msg.substring(0,48)+'…':v.msg,margin+35,y+4.8);
-      const iC=v.integrity<55?[239,68,68]:v.integrity<78?[245,158,11]:[34,197,94];
-      doc.setTextColor(...iC);doc.setFont('helvetica','bold');doc.text(v.integrity+'%',W-margin-3,y+4.8,{align:'right'});
-      y+=7;
+      const iC = v.integrity<55?[220,38,38]:v.integrity<78?[217,119,6]:[22,163,74];
+      doc.setTextColor(...iC); doc.setFont('helvetica','bold'); doc.text(v.integrity+'%',W-margin-3,y+4.8,{align:'right'});
+      y += 7;
     });
-    y+=8;
+    y += 8;
+
     if(S.screenshots.length>0){
-      if(y>H-60){doc.addPage();doc.setFillColor(11,11,11);doc.rect(0,0,W,H,'F');y=margin;}
-      doc.setFillColor(30,25,28);doc.setDrawColor(60,20,40);doc.roundedRect(margin,y,W-margin*2,8,2,2,'F');
-      doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(139,0,74);doc.text('VIOLATION SCREENSHOTS',margin+4,y+5.5);
-      y+=13;
-      const iW=(W-margin*2-8)/2,iH=iW*0.75;
+      if(y>H-60){ doc.addPage(); doc.setFillColor(248,247,245); doc.rect(0,0,W,H,'F'); y = margin; }
+      doc.setFillColor(255,255,255); doc.setDrawColor(226,221,216); doc.roundedRect(margin,y,W-margin*2,8,2,2,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(139,0,74); doc.text('VIOLATION SCREENSHOTS',margin+4,y+5.5);
+      y += 13;
+      const iW=(W-margin*2-8)/2, iH=iW*0.75;
       for(let i=0;i<S.screenshots.length;i++){
-        const ss=S.screenshots[i],col=i%2,sx=margin+col*(iW+8);
-        if(col===0&&i>0)y+=iH+18;
-        if(y+iH+18>H-15){doc.addPage();doc.setFillColor(11,11,11);doc.rect(0,0,W,H,'F');y=margin;}
-        doc.setFillColor(20,15,18);doc.setDrawColor(139,0,74);doc.setLineWidth(0.5);doc.roundedRect(sx-1,y-1,iW+2,iH+2,2,2,'FD');
-        try{doc.addImage(ss.img,'JPEG',sx,y,iW,iH);}catch(e){}
-        doc.setFillColor(139,0,74);doc.rect(sx-1,y+iH,iW+2,8,'F');
-        doc.setFont('helvetica','bold');doc.setFontSize(5.5);doc.setTextColor(242,239,231);doc.text('Alert #'+ss.num+' · '+ss.time,sx+2,y+iH+5);
-        const tp=ss.msg.toLowerCase().includes('phone')?'PHONE':ss.msg.toLowerCase().includes('tab')?'TAB':'DISTRACTED';
-        doc.setTextColor(255,180,180);doc.text(tp,sx+iW-2,y+iH+5,{align:'right'});
+        const ss=S.screenshots[i], col=i%2, sx=margin+col*(iW+8);
+        if(col===0 && i>0) y += iH+18;
+        if(y+iH+18>H-15){ doc.addPage(); doc.setFillColor(248,247,245); doc.rect(0,0,W,H,'F'); y = margin; }
+        doc.setFillColor(255,255,255); doc.setDrawColor(139,0,74); doc.setLineWidth(0.5); doc.roundedRect(sx-1,y-1,iW+2,iH+2,2,2,'FD');
+        try{ doc.addImage(ss.img,'JPEG',sx,y,iW,iH); }catch(e){}
+        doc.setFillColor(139,0,74); doc.rect(sx-1,y+iH,iW+2,8,'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(5.5); doc.setTextColor(255,255,255); doc.text('Alert #'+ss.num+' · '+ss.time,sx+2,y+iH+5);
+        const tp = ss.msg.toLowerCase().includes('phone')?'PHONE':ss.msg.toLowerCase().includes('tab')?'TAB':'DISTRACTED';
+        doc.setTextColor(255,210,225); doc.text(tp,sx+iW-2,y+iH+5,{align:'right'});
       }
-      y+=iH+20;
+      y += iH+20;
     }
-    const pages=doc.internal.getNumberOfPages();
+    const pages = doc.internal.getNumberOfPages();
     for(let p=1;p<=pages;p++){
-      doc.setPage(p);doc.setFillColor(20,15,18);doc.rect(0,H-12,W,12,'F');doc.setFillColor(139,0,74);doc.rect(0,H-12,W,0.8,'F');
-      doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(80,80,85);
-      doc.text('AI Exam Proctor System · Confidential',margin,H-5);doc.text('Page '+p+' of '+pages,W-margin,H-5,{align:'right'});
+      doc.setPage(p);
+      doc.setFillColor(255,255,255); doc.rect(0,H-12,W,12,'F'); doc.setFillColor(139,0,74); doc.rect(0,H-12,W,0.8,'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(136,136,136);
+      doc.text('AI Exam Proctor System · Confidential',margin,H-5); doc.text('Page '+p+' of '+pages,W-margin,H-5,{align:'right'});
     }
     doc.save('ViolationReport_'+session.id+'_'+session.examId+'.pdf');
     addLog('Report downloaded.','ok');
-  }catch(err){console.error(err);addLog('PDF error: '+err.message,'warn');}
-  finally{overlay.classList.remove('show');}
+  } catch(err){ console.error(err); addLog('PDF error: '+err.message,'warn'); }
+  finally{ overlay.classList.remove('show'); }
 }
 </script>
 </body>

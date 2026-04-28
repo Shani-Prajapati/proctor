@@ -1,8 +1,21 @@
-# AI Exam Proctor — Setup Instructions
+# AI Exam Proctor
 
-## Project Structure
+Light-themed AI exam proctoring system with strict Quiz Mode tab enforcement and low-latency real-time alerts.
+
+## What changed in this version
+
+1. **Professional light theme** — every page (login, student, faculty, phone-cam) now uses the same clean cream/maroon palette previously only on the faculty dashboard.
+2. **Strict Quiz Mode (2-tab rule)** — when the student presses *Enable Quiz Mode*, exactly **2 tabs** are allowed (proctor + quiz). The moment a 3rd tab from the same browser opens, an alert is fired to the faculty dashboard.
+3. **Low-latency pipeline** — model prediction loop runs every ~250 ms, model is pre-warmed at load, violations push to Firebase as fire-and-forget parallel writes (no UI await), faculty dashboard uses pure real-time Firestore listeners (no polling timer).
+
+## Quick start (Firebase mode — recommended)
+
+The HTML pages use Firebase by default. Edit `static/firebase-config.js` and put in your Firebase project config, then just open `static/login.html` in a browser, or serve the `static/` folder with any static server.
+
+## Quick start (local Python mode)
 
 ```
+
 your-project/
 ├── app.py                  ← Python Flask backend (RUN THIS)
 ├── requirements.txt        ← Python libraries
@@ -36,40 +49,30 @@ pip install -r requirements.txt
 ## Step 3 — Run the Server
 
 ```bash
+
+pip install -r requirements.txt
+(Changhes completed)
 python app.py
+# open http://localhost:5000
 ```
 
-You will see:
-```
-✅ Database ready: proctor.db
-🚀 AI Exam Proctor Backend
-   Open: http://localhost:5000
-```
+Flask serves everything in `static/` and adds API endpoints for an SQLite-backed alternative if you don't want Firebase.
 
-## Step 4 — Open in Browser
+## Files
 
-Go to: http://localhost:5000
+- `app.py` — optional Flask backend (SQLite)
+- `requirements.txt` — Python deps
+- `static/login.html` — sign in (student / faculty)
+- `static/index.html` — student exam page (camera + AI detection + Quiz Mode)
+- `static/faculty.html` — faculty live dashboard
+- `static/phone-cam.html` — phone-as-camera companion page (PeerJS)
+- `static/firebase-config.js` — Firebase init + helpers
+- `static/freesound_community-siren-alert-96052.mp3` — alert siren
+- `static/model/` — Teachable Machine model (`model.json`, `weights.bin`, `metadata.json`)
 
-## Python Backend API Endpoints
+## How Quiz Mode works (the 2-tab rule)
 
-| Method | URL | Description |
-|--------|-----|-------------|
-| POST | /api/faculty/register | Faculty signup |
-| POST | /api/faculty/login | Faculty login |
-| POST | /api/rooms/create | Create exam room |
-| GET  | /api/rooms/validate/:code | Validate room code |
-| POST | /api/student/login | Student login |
-| POST | /api/violations/log | Log a violation |
-| GET  | /api/dashboard/:room_code | Faculty dashboard data |
-| POST | /api/session/end | End student session |
-| GET  | /api/health | Check server is running |
+Each open tab on the student's browser registers itself on a `BroadcastChannel` named after the exam ID and sends a heartbeat every 800 ms with its tab ID. The proctor tab counts how many distinct tabs have heartbeated within the last 2 seconds.
 
-## What Changed from Pure HTML Version
-
-| Before (localStorage) | After (Python Backend) |
-|----------------------|----------------------|
-| Data stored in browser only | Data stored in SQLite database |
-| Data lost on browser clear | Data persists permanently |
-| Faculty can only see own tab | Faculty sees all students in real-time |
-| Passwords stored as plain text | Passwords hashed with SHA-256 |
-| No real backend | Flask REST API backend |
+- Quiz Mode OFF → tab switches are detected via `visibilitychange` (original behaviour).
+- Quiz Mode ON → tab switches are allowed (student is taking their quiz in another tab), BUT if more than 2 tabs are alive at once, a violation is logged to Firebase, faculty dashboard is notified instantly, and the student sees a red banner.

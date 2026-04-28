@@ -43,14 +43,18 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .sec-right{display:flex;align-items:center;gap:10px;}
 .btn-sec{padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--text2);font-size:.66rem;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s;font-family:'DM Sans',sans-serif;}
 .btn-sec:hover{border-color:var(--M);color:var(--M);}
-.refresh-timer{font-size:.6rem;color:var(--text3);font-family:'Orbitron',sans-serif;letter-spacing:.06em;}
+.live-status{font-size:.62rem;color:var(--green);font-family:'Orbitron',sans-serif;letter-spacing:.08em;display:flex;align-items:center;gap:6px;}
+.live-status .ldot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:blink 1.4s infinite;}
 .students-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
-.student-card{background:#fff;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);transition:box-shadow var(--ease),border-color var(--ease),transform var(--ease);animation:cardIn .35s ease;}
+.btn-download{width:100%;padding:9px;margin-top:10px;border:1px solid var(--M);border-radius:8px;background:#fff;color:var(--M);font-family:'Orbitron',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:.12em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .18s ease;}
+.btn-download:hover{background:var(--M);color:#fff;}
+.btn-download:disabled{opacity:.55;cursor:wait;}
+.student-card{background:#fff;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);transition:box-shadow var(--ease),border-color var(--ease),transform var(--ease);animation:cardIn .3s ease;}
 @keyframes cardIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .student-card:hover{box-shadow:0 8px 28px rgba(0,0,0,.1);transform:translateY(-2px);}
 .student-card.clean{border-color:rgba(22,163,74,.25);}
 .student-card.warning{border-color:rgba(217,119,6,.35);}
-.student-card.critical{border-color:rgba(220,38,38,.5);animation:cardIn .35s ease,pulse-card 2s ease-in-out infinite;}
+.student-card.critical{border-color:rgba(220,38,38,.5);animation:cardIn .3s ease,pulse-card 2s ease-in-out infinite;}
 @keyframes pulse-card{0%,100%{box-shadow:var(--shadow)}50%{box-shadow:0 0 0 3px rgba(220,38,38,.12),0 8px 28px rgba(0,0,0,.08);}}
 .student-card.ended{opacity:.55;border-color:var(--border);}
 .card-hdr{padding:13px 15px 11px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
@@ -75,9 +79,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .info-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
 .info-k{font-size:.6rem;color:var(--text3);letter-spacing:.04em;text-transform:uppercase;}
 .info-v{font-family:'Orbitron',sans-serif;font-size:.63rem;color:var(--text);font-weight:600;letter-spacing:.04em;}
-.info-v.danger{color:var(--red);}
-.info-v.warn{color:var(--amber);}
-.info-v.safe{color:var(--green);}
+.info-v.danger{color:var(--red);} .info-v.warn{color:var(--amber);} .info-v.safe{color:var(--green);}
 .int-bar-wrap{margin:9px 0 7px;}
 .int-bar-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
 .int-bar-lbl{font-size:.58rem;color:var(--text3);text-transform:uppercase;}
@@ -85,18 +87,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .int-bar-pct.safe{color:var(--green);} .int-bar-pct.warn{color:var(--amber);} .int-bar-pct.danger{color:var(--red);}
 .int-track{height:5px;border-radius:3px;background:var(--bg2);overflow:hidden;}
 .int-fill{height:100%;border-radius:3px;transition:width .8s ease,background .5s;}
-.vlog{margin-top:9px;}
-.vlog-title{font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:5px;}
-.vlog-list{display:flex;flex-direction:column;gap:3px;max-height:80px;overflow-y:auto;}
-.vlog-list::-webkit-scrollbar{width:2px}
-.vlog-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.vlog-item{display:flex;align-items:flex-start;gap:6px;padding:4px 7px;border-radius:5px;background:var(--bg);font-size:.6rem;}
-.vlog-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:3px;}
-.vlog-dot.phone{background:var(--amber);}
-.vlog-dot.tab{background:#6366f1;}
-.vlog-dot.dist{background:var(--red);}
-.vlog-time{color:var(--text3);font-family:'Orbitron',sans-serif;font-size:.5rem;min-width:30px;flex-shrink:0;margin-top:1px;}
-.vlog-msg{color:var(--text2);flex:1;line-height:1.4;}
 .details-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 12px;margin-bottom:10px;}
 .detail-item{display:flex;flex-direction:column;gap:2px;}
 .detail-val{font-family:'Orbitron',sans-serif;font-size:.58rem;color:var(--text);font-weight:600;letter-spacing:.04em;word-break:break-all;}
@@ -113,14 +103,18 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .empty-title{font-family:'Orbitron',sans-serif;font-size:.72rem;letter-spacing:.15em;color:var(--text3);}
 .empty-sub{font-size:.73rem;color:var(--text3);text-align:center;max-width:280px;line-height:1.6;}
 
-/* Toast */
-.toast{position:fixed;bottom:24px;right:24px;z-index:999;background:var(--red);color:#fff;padding:12px 18px;border-radius:10px;font-size:.7rem;font-weight:600;box-shadow:0 4px 20px rgba(220,38,38,.4);display:flex;align-items:center;gap:10px;transform:translateY(100px);opacity:0;transition:all .35s cubic-bezier(.4,0,.2,1);max-width:300px;}
-.toast.show{transform:translateY(0);opacity:1;}
+/* Quiz mode chip on student card */
+.quiz-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;background:#dbeafe;color:#1e40af;font-size:.55rem;font-weight:700;letter-spacing:.08em;font-family:'Orbitron',sans-serif;margin-left:6px;}
 
-/* ══ ROOM CODE POPUP ══ */
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;background:var(--red);color:#fff;padding:12px 18px;border-radius:10px;font-size:.7rem;font-weight:600;box-shadow:0 4px 20px rgba(220,38,38,.4);display:flex;align-items:center;gap:10px;transform:translateY(100px);opacity:0;transition:all .35s cubic-bezier(.4,0,.2,1);max-width:320px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.quiz{background:#1e40af;box-shadow:0 4px 20px rgba(30,64,175,.4);}
+
+/* Room code popup */
 .popup-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;}
 .popup-overlay.hidden{display:none;}
-.popup-box{background:#fff;border-radius:16px;padding:32px;max-width:380px;width:100%;margin:16px;box-shadow:0 20px 60px rgba(0,0,0,.2);text-align:center;animation:popIn .35s cubic-bezier(.34,1.56,.64,1);}
+.popup-box{background:#fff;border-radius:16px;padding:32px;max-width:380px;width:100%;margin:16px;box-shadow:0 20px 60px rgba(0,0,0,.2);text-align:center;animation:popIn .3s cubic-bezier(.34,1.56,.64,1);}
 @keyframes popIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
 .popup-icon{font-size:2.5rem;margin-bottom:12px;}
 .popup-title{font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.1em;color:var(--text);margin-bottom:6px;}
@@ -139,26 +133,26 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
-<!-- Room Code Popup -->
+<!-- Room code popup -->
 <div class="popup-overlay" id="code-popup">
   <div class="popup-box">
     <div class="popup-icon">🔑</div>
     <div class="popup-title">YOUR EXAM ROOM CODE</div>
     <div class="popup-sub">Share this code with your students. They must enter it to join your exam session.</div>
     <div class="code-display" id="room-code-display">------</div>
-    <div class="popup-note">This code is <b>unique to your session</b>. Only students with this code can join your proctored exam room. Code expires when you log out.</div>
+    <div class="popup-note">This code is <b>unique to your session</b>. Only students with this code can join your proctored exam room.</div>
     <button class="btn-regen" onclick="generateNewCode()">↻ Generate New Code</button>
     <button class="btn-popup-close" onclick="closeCodePopup()">ENTER DASHBOARD →</button>
   </div>
 </div>
 
 <!-- Toast -->
-<div class="toast" id="toast"><span>🚨</span><span id="toast-msg">Violation detected</span></div>
+<div class="toast" id="toast"><span id="toast-icon">🚨</span><span id="toast-msg">Violation detected</span></div>
 
-<!-- Header -->
 <header class="hdr">
   <div class="hdr-l">
     <div class="logo"><svg width="20" height="20" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="9.2" stroke="#fff" stroke-width="1.4"/><ellipse cx="11" cy="11" rx="6" ry="3.5" stroke="#fff" stroke-width="1.2" opacity=".7"/><circle cx="11" cy="11" r="2.5" fill="#fff" opacity=".9"/></svg></div>
@@ -183,8 +177,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="sec-hdr">
     <div class="sec-title">ACTIVE EXAM SESSIONS <span class="sec-badge" id="count-badge">0 STUDENTS</span></div>
     <div class="sec-right">
-      <span class="refresh-timer" id="refresh-timer">Next refresh in 10s</span>
-      <button class="btn-sec" onclick="refresh()">↻ Refresh Now</button>
+      <span class="live-status" id="live-status"><span class="ldot"></span>REAL-TIME</span>
     </div>
   </div>
   <div class="students-grid" id="students-grid">
@@ -196,27 +189,21 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 const session=JSON.parse(sessionStorage.getItem('proctor_session')||'null');
 if(!session||session.role!=='faculty'){window.location.href='login.html';}
 const g=id=>document.getElementById(id);
-let refreshCountdown=10, prevViolationCounts={}, currentRoomCode='';
+let prevViolationCounts={}, prevLastMsg={}, currentRoomCode='';
 
 window.addEventListener('load',()=>{
   g('fac-name').textContent=session.name||'Faculty';
   g('fac-avatar').textContent=(session.name||'F')[0].toUpperCase();
   tickClock();setInterval(tickClock,1000);
 
-  // Generate or restore room code for this faculty session
   const storedCode = sessionStorage.getItem('proctor_faculty_room_'+session.email);
   if(storedCode){ currentRoomCode=storedCode; }
   else{ currentRoomCode=generateCode(); }
   registerRoom(currentRoomCode);
   g('room-code-display').textContent=currentRoomCode;
-  document.getElementById('code-popup').classList.remove('hidden');
+  g('code-popup').classList.remove('hidden');
 
-  refresh();
-  setInterval(()=>{
-    refreshCountdown--;
-    g('refresh-timer').textContent='Next refresh in '+refreshCountdown+'s';
-    if(refreshCountdown<=0){refreshCountdown=10;refresh();}
-  },1000);
+  startListening();  // pure realtime, no polling
 });
 
 function tickClock(){g('hclock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});}
@@ -232,21 +219,20 @@ async function generateNewCode(){
   sessionStorage.setItem('proctor_faculty_room_'+session.email, currentRoomCode);
   await registerRoom(currentRoomCode);
   g('room-code-display').textContent=currentRoomCode;
+  startListening();
 }
 
-function showCodePopup(){document.getElementById('code-popup').classList.remove('hidden');}
-function closeCodePopup(){document.getElementById('code-popup').classList.add('hidden');}
+function showCodePopup(){g('code-popup').classList.remove('hidden');}
+function closeCodePopup(){g('code-popup').classList.add('hidden');}
 
-// Real-time Firebase listener — updates instantly when student gets flagged
-let unsubscribe = null;
-function refresh(){
-  if(unsubscribe) unsubscribe(); // stop old listener
+let unsubscribe=null;
+function startListening(){
+  if(unsubscribe) unsubscribe();
   unsubscribe = fb_listenToRoom(currentRoomCode, students => {
     const active          = students.filter(s=>s.status!=='ended');
     const totalViolations = students.reduce((a,s)=>a+(s.violations||0),0);
     const flagged         = students.filter(s=>(s.violations||0)>0).length;
     const critical        = students.filter(s=>(s.violations||0)>=5).length;
-
     g('stat-active').textContent     = active.length;
     g('stat-violations').textContent = totalViolations;
     g('stat-flagged').textContent    = flagged;
@@ -255,14 +241,17 @@ function refresh(){
 
     students.forEach(s=>{
       const prev=prevViolationCounts[s.student_id];
-      if(prev!==undefined&&(s.violations||0)>prev){
-        showToast('🚨 '+s.student_id+': '+(s.last_violation||'Violation'));
+      const cur=s.violations||0;
+      const lastMsg=s.last_violation||'';
+      if(prev!==undefined && cur>prev){
+        const isQuiz = lastMsg.toLowerCase().includes('quiz mode') || lastMsg.toLowerCase().includes('extra tab');
+        showToast((isQuiz?'📋 ':'🚨 ')+s.student_id+': '+(lastMsg||'Violation'), isQuiz);
       }
-      prevViolationCounts[s.student_id]=s.violations||0;
+      prevViolationCounts[s.student_id]=cur;
+      prevLastMsg[s.student_id]=lastMsg;
     });
 
     renderGrid(students);
-    g('refresh-timer').textContent='🔴 Live';
   });
 }
 
@@ -284,12 +273,15 @@ function buildCard(s){
   const intColor=integrity<55?'danger':integrity<78?'warn':'safe';
   const intBg=integrity<55?'#dc2626':integrity<78?'#d97706':'#16a34a';
   const loginTime = s.login_time ? new Date(s.login_time).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) : '—';
+  const inQuiz = !!s.quiz_mode;
+  const lastMsg = (s.last_violation||'').toLowerCase();
+  const isExtraTab = lastMsg.includes('quiz mode') || lastMsg.includes('extra tab');
   return '<div class="student-card '+cardClass+(status==='ended'?' ended':'')+'" id="sc-'+escHtml(s.student_id)+'">'
     +'<div class="card-hdr">'
       +'<div class="card-hdr-l">'
         +'<div class="student-avatar '+cardClass+'">'+initials+'</div>'
         +'<div>'
-          +'<div class="student-name">'+escHtml(s.student_name||'Unknown')+'</div>'
+          +'<div class="student-name">'+escHtml(s.student_name||'Unknown')+(inQuiz?'<span class="quiz-chip">📋 QUIZ MODE</span>':'')+'</div>'
           +'<div class="student-sub">'+escHtml(s.subject||'—')+' · '+escHtml(s.exam_id||'—')+'</div>'
         +'</div>'
       +'</div>'
@@ -307,24 +299,162 @@ function buildCard(s){
         +'<div class="detail-item"><span class="info-k">Exam ID</span><span class="info-v detail-val">'+escHtml(s.exam_id||'—')+'</span></div>'
         +'<div class="detail-item"><span class="info-k">Joined At</span><span class="info-v detail-val">'+loginTime+'</span></div>'
       +'</div>'
+      +(s.last_violation?'<div style="font-size:.62rem;padding:7px 10px;border-radius:6px;background:'+(isExtraTab?'#dbeafe':'var(--red10)')+';color:'+(isExtraTab?'#1e40af':'var(--red)')+';margin-bottom:8px;">⚡ Latest: '+escHtml(s.last_violation)+'</div>':'')
       +'<div class="divider-line"></div>'
       +'<div class="mini-stats">'
         +'<div class="mini-stat"><div class="mini-stat-n '+(v>=5?'danger':v>0?'warn':'safe')+'">'+v+'</div><div class="mini-stat-l">Alerts</div></div>'
-        +'<div class="mini-stat"><div class="mini-stat-n">'+integrity+'%</div><div class="mini-stat-l">Integrity</div></div>'
+        +'<div class="mini-stat"><div class="mini-stat-n '+intColor+'">'+integrity+'%</div><div class="mini-stat-l">Integrity</div></div>'
         +'<div class="mini-stat"><div class="mini-stat-n">'+loginTime+'</div><div class="mini-stat-l">Joined</div></div>'
         +'<div class="mini-stat"><div class="mini-stat-n '+(status==='critical'?'danger':status==='warning'?'warn':'safe')+'">'+statusText+'</div><div class="mini-stat-l">Status</div></div>'
       +'</div>'
       +'<div class="int-track" style="margin:6px 0 10px;"><div class="int-fill" style="width:'+integrity+'%;background:'+intBg+';"></div></div>'
+      +'<button class="btn-download" onclick="downloadStudentReport(\''+escAttr(s.exam_id||'')+'\',\''+escAttr(s.student_id||'')+'\',\''+escAttr(s.student_name||'')+'\',\''+escAttr(s.subject||'')+'\',this)">⬇ DOWNLOAD REPORT</button>'
     +'</div>'
   +'</div>';
 }
 
+function escAttr(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');}
+
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 let toastTimer;
-function showToast(msg){const t=g('toast');g('toast-msg').textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),5000);}
+function showToast(msg, isQuiz){
+  const t=g('toast');
+  g('toast-msg').textContent=msg;
+  g('toast-icon').textContent=isQuiz?'📋':'🚨';
+  t.classList.toggle('quiz', !!isQuiz);
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),5000);
+}
+
+async function downloadStudentReport(examId, studentId, studentName, subject, btn){
+  if(!examId){ showToast('No exam ID for this student', false); return; }
+  const oldHtml = btn ? btn.innerHTML : '';
+  if(btn){ btn.disabled = true; btn.innerHTML = '⏳ GENERATING…'; }
+  try{
+    const data = await fb_getSessionReport(examId);
+    const sess = data.session || {};
+    const violations = data.violations || [];
+    const integrity  = sess.integrity ?? Math.max(0, 100 - (sess.violations||0)*7);
+    const status     = sess.status || 'active';
+    const loginTime  = sess.login_time ? new Date(sess.login_time).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'}) : '—';
+    const lastUpdate = sess.last_update ? new Date(sess.last_update).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'}) : '—';
+    const genTime    = new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
+    const totalV     = sess.violations || violations.length;
+
+    const {jsPDF} = window.jspdf;
+    const doc = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const W=210, H=297, margin=15; let y=margin;
+
+    // Cream background
+    doc.setFillColor(248,247,245); doc.rect(0,0,W,H,'F');
+    // Maroon header band
+    doc.setFillColor(139,0,74); doc.rect(0,0,W,28,'F');
+    doc.setFillColor(255,255,255); doc.circle(margin+8,14,8,'F');
+    doc.setDrawColor(139,0,74); doc.setLineWidth(0.6); doc.ellipse(margin+8,14,4.5,2.5,'S');
+    doc.setFillColor(139,0,74); doc.circle(margin+8,14,1.4,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(255,255,255); doc.text('AI EXAM PROCTOR',margin+20,11);
+    doc.setFontSize(8);  doc.setTextColor(255,220,235); doc.text('FACULTY VIOLATION REPORT',margin+20,17);
+    doc.setFontSize(7);  doc.setTextColor(255,220,235); doc.text('CONFIDENTIAL — FOR FACULTY USE ONLY',margin+20,23);
+    doc.setFontSize(6.5);doc.setTextColor(255,220,235); doc.text('Generated: '+genTime,W-margin,11,{align:'right'});
+    y = 38;
+
+    const cards = [
+      {label:'EXAM ID',     value: examId || '—'},
+      {label:'CANDIDATE',   value: studentName || sess.student_name || '—'},
+      {label:'COLLEGE ID',  value: studentId   || sess.student_id   || '—'},
+      {label:'SUBJECT',     value: subject     || sess.subject      || '—'},
+      {label:'STATUS',      value: status.toUpperCase()},
+      {label:'VIOLATIONS',  value: String(totalV)}
+    ];
+    const cW=(W-margin*2-10)/3, cH=18;
+    cards.forEach((c,i)=>{
+      const col=i%3, row=Math.floor(i/3), cx=margin+col*(cW+5), cy=y+row*(cH+5);
+      doc.setFillColor(255,255,255); doc.setDrawColor(226,221,216); doc.setLineWidth(0.3);
+      doc.roundedRect(cx,cy,cW,cH,2,2,'FD');
+      doc.setFont('helvetica','bold'); doc.setFontSize(5.5); doc.setTextColor(139,0,74); doc.text(c.label,cx+4,cy+6);
+      doc.setFont('helvetica','bold'); doc.setFontSize(9);
+      if(c.label==='VIOLATIONS' && totalV>=5) doc.setTextColor(220,38,38); else doc.setTextColor(26,26,26);
+      const val = String(c.value); doc.text(val.length>22?val.substring(0,20)+'…':val, cx+4, cy+14);
+    });
+    y += 2*(cH+5)+8;
+
+    // Integrity bar
+    doc.setFillColor(255,255,255); doc.setDrawColor(226,221,216); doc.setLineWidth(0.3);
+    doc.roundedRect(margin,y,W-margin*2,14,2,2,'FD');
+    doc.setFont('helvetica','bold'); doc.setFontSize(6); doc.setTextColor(74,74,74); doc.text('INTEGRITY SCORE',margin+4,y+5.5);
+    const bX=margin+45, bW=W-margin*2-55, bH=4, bY=y+4.5;
+    doc.setFillColor(240,238,235); doc.roundedRect(bX,bY,bW,bH,1,1,'F');
+    const bColor = integrity<55?[220,38,38]:integrity<78?[217,119,6]:[22,163,74];
+    doc.setFillColor(bColor[0],bColor[1],bColor[2]); doc.roundedRect(bX,bY,(bW*integrity)/100,bH,1,1,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(bColor[0],bColor[1],bColor[2]); doc.text(integrity+'%',W-margin-4,y+9,{align:'right'});
+    y += 22;
+
+    // Session info row
+    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(74,74,74);
+    doc.text('Joined: '+loginTime, margin, y);
+    doc.text('Last update: '+lastUpdate, W-margin, y, {align:'right'});
+    y += 8;
+
+    // Violation log header
+    doc.setFillColor(255,255,255); doc.setDrawColor(226,221,216); doc.roundedRect(margin,y,W-margin*2,8,2,2,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(139,0,74); doc.text('VIOLATION LOG',margin+4,y+5.5);
+    doc.setFontSize(6); doc.setTextColor(136,136,136); doc.text('('+violations.length+' recorded)',margin+52,y+5.5);
+    y += 11;
+
+    if(violations.length === 0){
+      doc.setFillColor(255,255,255); doc.setDrawColor(226,221,216); doc.roundedRect(margin,y,W-margin*2,12,2,2,'FD');
+      doc.setFont('helvetica','italic'); doc.setFontSize(8); doc.setTextColor(22,163,74);
+      doc.text('No violations recorded — clean session.', W/2, y+8, {align:'center'});
+      y += 16;
+    } else {
+      doc.setFillColor(139,0,74); doc.rect(margin,y,W-margin*2,7,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(255,255,255);
+      doc.text('#',margin+3,y+4.8); doc.text('TIME',margin+12,y+4.8); doc.text('VIOLATION',margin+35,y+4.8); doc.text('INTEGRITY',W-margin-3,y+4.8,{align:'right'});
+      y += 7;
+      violations.forEach((v,i)=>{
+        if(y>H-25){ doc.addPage(); doc.setFillColor(248,247,245); doc.rect(0,0,W,H,'F'); y = margin; }
+        const rowBg = i%2===0?[255,255,255]:[248,247,245];
+        doc.setFillColor(rowBg[0],rowBg[1],rowBg[2]); doc.rect(margin,y,W-margin*2,7,'F');
+        const msg = String(v.msg||'');
+        const isPhone=msg.toLowerCase().includes('phone'), isTab=msg.toLowerCase().includes('tab');
+        const sideCol = isPhone?[217,119,6]:isTab?[30,64,175]:[220,38,38];
+        doc.setFillColor(sideCol[0],sideCol[1],sideCol[2]); doc.rect(margin,y,1.5,7,'F');
+        doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(74,74,74);
+        doc.text(String(v.num||(i+1)),margin+3,y+4.8); doc.text(String(v.time||'—'),margin+12,y+4.8);
+        doc.text(msg.length>50?msg.substring(0,48)+'…':msg, margin+35, y+4.8);
+        const intg = v.integrity ?? 100;
+        const iC = intg<55?[220,38,38]:intg<78?[217,119,6]:[22,163,74];
+        doc.setTextColor(iC[0],iC[1],iC[2]); doc.setFont('helvetica','bold'); doc.text(intg+'%',W-margin-3,y+4.8,{align:'right'});
+        y += 7;
+      });
+      y += 8;
+    }
+
+    // Footer on every page
+    const pages = doc.internal.getNumberOfPages();
+    for(let p=1;p<=pages;p++){
+      doc.setPage(p);
+      doc.setFillColor(255,255,255); doc.rect(0,H-12,W,12,'F'); doc.setFillColor(139,0,74); doc.rect(0,H-12,W,0.8,'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(6); doc.setTextColor(136,136,136);
+      doc.text('AI Exam Proctor System · Confidential',margin,H-5); doc.text('Page '+p+' of '+pages,W-margin,H-5,{align:'right'});
+    }
+
+    const safeId = (studentId||'student').replace(/[^A-Za-z0-9_-]/g,'_');
+    const safeExam = (examId||'exam').replace(/[^A-Za-z0-9_-]/g,'_');
+    doc.save('ProctorReport_'+safeId+'_'+safeExam+'.pdf');
+    showToast('Report downloaded for '+(studentName||studentId), false);
+  } catch(err){
+    console.error(err);
+    showToast('PDF error: '+(err.message||'unknown'), false);
+  } finally {
+    if(btn){ btn.disabled = false; btn.innerHTML = oldHtml; }
+  }
+}
 
 function logOut(){
+  if(unsubscribe) unsubscribe();
   sessionStorage.removeItem('proctor_session');
   sessionStorage.removeItem('proctor_faculty_room_'+session.email);
   window.location.href='login.html';
